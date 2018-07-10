@@ -1,0 +1,99 @@
+#! /usr/bin/env python
+"""Parses Terraform tfstate to generate Ansible inventory."""
+
+import argparse
+import json
+import os
+import yaml
+
+PARSER = argparse.ArgumentParser()
+PARSER.add_argument("-i", "--inventory", help="Ansible inventory",
+                    default="./terraform_inventory.yml")
+PARSER.add_argument("-t", "--tfstate", help="Terraform tftstate file",
+                    default="./terraform.tfstate")
+ARGS = PARSER.parse_args()
+
+
+SCRIPT_PATH = os.path.dirname(os.path.abspath(__file__))
+TERRAFORM_INVENTORY = []
+TERRAFORM_ANSIBLE_INVENTORY = ("%s/" + ARGS.inventory) % SCRIPT_PATH
+TERRAFORM_NETWORK_INTERFACES = []
+TERRAFORM_PUBLIC_IPS = []
+TERRAFORM_TFSTATE = ("%s/" + ARGS.tfstate) % SCRIPT_PATH
+TERRAFORM_VMS = []
+
+with open(TERRAFORM_TFSTATE) as json_file:
+    DATA = json.load(json_file)
+    RESOURCES = DATA['modules'][0]['resources']
+    for NAME, DATA in RESOURCES.items():
+        if DATA['type'] == "azurerm_network_interface":
+            interface = {}
+            private_ips = []
+            public_ips = []
+            raw_attrs = DATA['primary']['attributes']
+            num_ips = int(raw_attrs['ip_configuration.#'])
+            for count in xrange(num_ips):
+                private_ips.append(
+                    raw_attrs['private_ip_addresses.%s' % count])
+                public_ips.append(
+                    raw_attrs['ip_configuration.%s.public_ip_address_id' % count])
+            interface.update({"virtual_machine_id": raw_attrs['virtual_machine_id'],
+                              "mac_address": raw_attrs['mac_address'],
+                              "private_ip_address": raw_attrs['private_ip_address'],
+                              "private_ips": private_ips,
+                              "public_ips": public_ips})
+            TERRAFORM_NETWORK_INTERFACES.append(interface)
+
+        if DATA['type'] == "azurerm_public_ip":
+            public_ip = {}
+            raw_attrs = DATA['primary']['attributes']
+            public_ip.update({"id": raw_attrs['id'],
+                              "ip_address": raw_attrs['ip_address']})
+            TERRAFORM_PUBLIC_IPS.append(public_ip)
+
+        if DATA['type'] == "azurerm_virtual_machine":
+            vm = {}
+            raw_attrs = DATA['primary']['attributes']
+            vm.update(
+                {"name": raw_attrs['name'], "id": raw_attrs['id'],
+                 "location": raw_attrs['location'],
+                 "resource_group_name": raw_attrs['resource_group_name'],
+                 "vm_size": raw_attrs['vm_size']})
+            TERRAFORM_VMS.append(vm)
+
+for vm in TERRAFORM_VMS:
+    pub_ips = []
+    _vm = {}
+    for interface in TERRAFORM_NETWORK_INTERFACES:
+        if interface['virtual_machine_id'] == vm['id']:
+            for pub_ip in TERRAFORM_PUBLIC_IPS:
+                if pub_ip['id'] in interface['public_ips']:
+                    if pub_ip['ip_address'] not in pub_ips:
+                        pub_ips.append(pub_ip['ip_address'])
+    _vm.update(
+        {"inventory_hostname": vm['name'],
+         "ansible_host": interface['private_ip_address'],
+         "location": vm['location'],
+         "private_ips": interface['private_ips'],
+         "public_ips": pub_ips,
+         "resource_group_name": vm['resource_group_name'],
+         "vm_size": vm['vm_size']})
+    TERRAFORM_INVENTORY.append(_vm)
+
+# Reset TERRAFORM_VMS for new collection
+TERRAFORM_VMS = {}
+TERRAFORM_VMS['terraform_vms'] = {}
+TERRAFORM_VMS['terraform_vms']['hosts'] = {}
+
+for vm in TERRAFORM_INVENTORY:
+    TERRAFORM_VMS['terraform_vms']['hosts'][vm['inventory_hostname']] = {}
+    TERRAFORM_VMS['terraform_vms']['hosts'][vm['inventory_hostname']].update(
+        {"ansible_host": vm['ansible_host'], "location": vm['location'],
+         "private_ips": vm['private_ips'], "public_ips": vm['public_ips'],
+         "resource_group_name": vm['resource_group_name'],
+         "vm_size": vm['vm_size']})
+
+TERRAFORM_VMS = yaml.load(json.dumps(TERRAFORM_VMS))
+
+with open(TERRAFORM_ANSIBLE_INVENTORY, 'w') as yaml_file:
+    yaml.dump(TERRAFORM_VMS, yaml_file, default_flow_style=False)

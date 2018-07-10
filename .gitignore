@@ -1,0 +1,3 @@
+terraform_inventory.yml
+terraform.tfstate
+terraform.tfstate.*
