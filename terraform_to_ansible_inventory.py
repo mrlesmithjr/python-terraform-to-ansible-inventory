@@ -95,15 +95,15 @@ for vm in TERRAFORM_VMS:
                     if pub_ip['id'] in interface['public_ips']:
                         if pub_ip['ip_address'] not in pub_ips:
                             pub_ips.append(pub_ip['ip_address'])
-        _vm.update(
-            {"inventory_hostname": vm['name'], "data_type": vm['data_type'],
-             "ansible_host": interface['private_ip_address'],
-             "location": vm['location'],
-             "private_ips": interface['private_ips'],
-             "public_ips": pub_ips,
-             "resource_group_name": vm['resource_group_name'],
-             "vm_size": vm['vm_size'], "ansible_groups": vm['ansible_groups']})
-        TERRAFORM_INVENTORY.append(_vm)
+                    _vm.update(
+                        {"inventory_hostname": vm['name'], "data_type": vm['data_type'],
+                         "ansible_host": interface['private_ip_address'],
+                         "location": vm['location'],
+                         "private_ips": interface['private_ips'],
+                         "public_ips": pub_ips,
+                         "resource_group_name": vm['resource_group_name'],
+                         "vm_size": vm['vm_size'], "ansible_groups": vm['ansible_groups']})
+                    TERRAFORM_INVENTORY.append(_vm)
 
     elif vm['data_type'] == "vsphere_virtual_machine":
         _vm.update(

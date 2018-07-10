@@ -32,11 +32,11 @@ tags {
 terraform_vms:
   hosts:
     Jumphost:
-      ansible_host: 10.0.2.6
+      ansible_host: 10.0.2.4
       data_type: azurerm_virtual_machine
       location: eastus
       private_ips:
-      - 10.0.2.6
+      - 10.0.2.4
       public_ips:
       - 40.117.254.203
       resource_group_name: acctestrg
@@ -51,20 +51,20 @@ terraform_vms:
       resource_group_name: acctestrg
       vm_size: Standard_B1s
     acctvm1:
-      ansible_host: 10.0.2.6
+      ansible_host: 10.0.2.7
       data_type: azurerm_virtual_machine
       location: eastus
       private_ips:
-      - 10.0.2.6
+      - 10.0.2.7
       public_ips: []
       resource_group_name: acctestrg
       vm_size: Standard_B1s
     acctvm2:
-      ansible_host: 10.0.2.6
+      ansible_host: 10.0.2.5
       data_type: azurerm_virtual_machine
       location: eastus
       private_ips:
-      - 10.0.2.6
+      - 10.0.2.5
       public_ips: []
       resource_group_name: acctestrg
       vm_size: Standard_B1s
@@ -311,11 +311,11 @@ jumphosts:
 terraform_vms:
   hosts:
     Jumphost:
-      ansible_host: 10.0.2.6
+      ansible_host: 10.0.2.4
       data_type: azurerm_virtual_machine
       location: eastus
       private_ips:
-      - 10.0.2.6
+      - 10.0.2.4
       public_ips:
       - 40.117.254.203
       resource_group_name: acctestrg
@@ -330,20 +330,20 @@ terraform_vms:
       resource_group_name: acctestrg
       vm_size: Standard_B1s
     acctvm1:
-      ansible_host: 10.0.2.6
+      ansible_host: 10.0.2.7
       data_type: azurerm_virtual_machine
       location: eastus
       private_ips:
-      - 10.0.2.6
+      - 10.0.2.7
       public_ips: []
       resource_group_name: acctestrg
       vm_size: Standard_B1s
     acctvm2:
-      ansible_host: 10.0.2.6
+      ansible_host: 10.0.2.5
       data_type: azurerm_virtual_machine
       location: eastus
       private_ips:
-      - 10.0.2.6
+      - 10.0.2.5
       public_ips: []
       resource_group_name: acctestrg
       vm_size: Standard_B1s
