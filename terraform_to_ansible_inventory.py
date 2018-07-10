@@ -2,6 +2,7 @@
 """Parses Terraform tfstate to generate Ansible inventory."""
 
 import argparse
+import ast
 import json
 import os
 import yaml
@@ -16,6 +17,7 @@ ARGS = PARSER.parse_args()
 
 SCRIPT_PATH = os.path.dirname(os.path.abspath(__file__))
 TERRAFORM_INVENTORY = []
+TERRAFORM_ANSIBLE_GROUPS = []
 TERRAFORM_ANSIBLE_INVENTORY = ("%s/" + ARGS.inventory) % SCRIPT_PATH
 TERRAFORM_NETWORK_INTERFACES = []
 TERRAFORM_PUBLIC_IPS = []
@@ -53,16 +55,25 @@ with open(TERRAFORM_TFSTATE) as json_file:
 
         if DATA['type'] == "azurerm_virtual_machine":
             vm = {}
+            ansible_groups = []
             raw_attrs = DATA['primary']['attributes']
+            if raw_attrs['tags.ansible_groups']:
+                groups = ast.literal_eval(raw_attrs['tags.ansible_groups'])
+                for group in groups:
+                    ansible_groups.append(group)
+                    if group not in TERRAFORM_ANSIBLE_GROUPS:
+                        TERRAFORM_ANSIBLE_GROUPS.append(group)
             vm.update(
                 {"data_type": DATA['type'], "name": raw_attrs['name'],
                  "id": raw_attrs['id'], "location": raw_attrs['location'],
                  "resource_group_name": raw_attrs['resource_group_name'],
-                 "vm_size": raw_attrs['vm_size']})
+                 "vm_size": raw_attrs['vm_size'],
+                 "ansible_groups": ansible_groups})
             TERRAFORM_VMS.append(vm)
 
         if DATA['type'] == "vsphere_virtual_machine":
             vm = {}
+            ansible_groups = []
             raw_attrs = DATA['primary']['attributes']
             vm.update(
                 {"ansible_host": raw_attrs['network_interface.0.ipv4_address'],
@@ -70,7 +81,8 @@ with open(TERRAFORM_TFSTATE) as json_file:
                  "mac_address": raw_attrs['network_interface.0.mac_address'],
                  "memory": raw_attrs['memory'], "name": raw_attrs['name'],
                  "network_label": raw_attrs['network_interface.0.label'],
-                 "uuid": raw_attrs['uuid'], "vcpu": raw_attrs['vcpu']})
+                 "uuid": raw_attrs['uuid'], "vcpu": raw_attrs['vcpu'],
+                 "ansible_groups": ansible_groups})
             TERRAFORM_VMS.append(vm)
 
 for vm in TERRAFORM_VMS:
@@ -90,7 +102,7 @@ for vm in TERRAFORM_VMS:
              "private_ips": interface['private_ips'],
              "public_ips": pub_ips,
              "resource_group_name": vm['resource_group_name'],
-             "vm_size": vm['vm_size']})
+             "vm_size": vm['vm_size'], "ansible_groups": vm['ansible_groups']})
         TERRAFORM_INVENTORY.append(_vm)
 
     elif vm['data_type'] == "vsphere_virtual_machine":
@@ -99,7 +111,8 @@ for vm in TERRAFORM_VMS:
              "ansible_host": vm['ansible_host'],
              "mac_address": vm['mac_address'], "memory": vm['memory'],
              "network_label": vm['network_label'],
-             "uuid": vm['uuid'], "vcpu": vm['vcpu']}
+             "uuid": vm['uuid'], "vcpu": vm['vcpu'],
+             "ansible_groups": vm['ansible_groups']}
         )
         TERRAFORM_INVENTORY.append(_vm)
 
@@ -107,6 +120,10 @@ for vm in TERRAFORM_VMS:
 TERRAFORM_VMS = {}
 TERRAFORM_VMS['terraform_vms'] = {}
 TERRAFORM_VMS['terraform_vms']['hosts'] = {}
+
+for tag in TERRAFORM_ANSIBLE_GROUPS:
+    TERRAFORM_VMS[tag] = {}
+    TERRAFORM_VMS[tag]['hosts'] = {}
 
 for vm in TERRAFORM_INVENTORY:
     TERRAFORM_VMS['terraform_vms']['hosts'][vm['inventory_hostname']] = {}
@@ -124,6 +141,8 @@ for vm in TERRAFORM_INVENTORY:
              "network_label": vm['network_label'], "uuid": vm['uuid'],
              "vcpu": int(vm['vcpu'])}
         )
+    for tag in vm['ansible_groups']:
+        TERRAFORM_VMS[tag]['hosts'][vm['inventory_hostname']] = {}
 
 TERRAFORM_VMS = yaml.load(json.dumps(TERRAFORM_VMS))
 

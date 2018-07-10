@@ -3,6 +3,21 @@
 This script will ingest a Terraform tfstate file and generate an Ansible
 inventory for consumption.
 
+## Ansible Groups
+
+By default all VMs are placed into the Ansible group `terraform_vms`, however
+you can also define additional Ansible groups by leveraging tags on your VM
+resources. By default this will currently look for `tags.ansible_groups` which
+can be defined on a resource as below:
+
+> NOTE: Currently only tested on Azure VM resources.
+
+```json
+tags {
+  ansible_groups = "['test', 'cluster']"
+}
+```
+
 ## Execution
 
 ```bash
@@ -280,6 +295,64 @@ terraform_vms:
       network_label: VSS-VLAN-102
       uuid: 422aae57-67e8-50d8-66f6-3a11bdc87a78
       vcpu: 1
+```
+
+### Azure Using Tags For Ansible Groups
+
+```yaml
+cluster:
+  hosts:
+    acctvm0: {}
+    acctvm1: {}
+    acctvm2: {}
+jumphosts:
+  hosts:
+    Jumphost: {}
+terraform_vms:
+  hosts:
+    Jumphost:
+      ansible_host: 10.0.2.6
+      data_type: azurerm_virtual_machine
+      location: eastus
+      private_ips:
+      - 10.0.2.6
+      public_ips:
+      - 40.117.254.203
+      resource_group_name: acctestrg
+      vm_size: Standard_B1s
+    acctvm0:
+      ansible_host: 10.0.2.6
+      data_type: azurerm_virtual_machine
+      location: eastus
+      private_ips:
+      - 10.0.2.6
+      public_ips: []
+      resource_group_name: acctestrg
+      vm_size: Standard_B1s
+    acctvm1:
+      ansible_host: 10.0.2.6
+      data_type: azurerm_virtual_machine
+      location: eastus
+      private_ips:
+      - 10.0.2.6
+      public_ips: []
+      resource_group_name: acctestrg
+      vm_size: Standard_B1s
+    acctvm2:
+      ansible_host: 10.0.2.6
+      data_type: azurerm_virtual_machine
+      location: eastus
+      private_ips:
+      - 10.0.2.6
+      public_ips: []
+      resource_group_name: acctestrg
+      vm_size: Standard_B1s
+test:
+  hosts:
+    Jumphost: {}
+    acctvm0: {}
+    acctvm1: {}
+    acctvm2: {}
 ```
 
 ## License
