@@ -61,6 +61,18 @@ with open(TERRAFORM_TFSTATE) as json_file:
                  "vm_size": raw_attrs['vm_size']})
             TERRAFORM_VMS.append(vm)
 
+        if DATA['type'] == "vsphere_virtual_machine":
+            vm = {}
+            raw_attrs = DATA['primary']['attributes']
+            vm.update(
+                {"ansible_host": raw_attrs['network_interface.0.ipv4_address'],
+                 "data_type": DATA['type'], "id": raw_attrs['id'],
+                 "mac_address": raw_attrs['network_interface.0.mac_address'],
+                 "memory": raw_attrs['memory'], "name": raw_attrs['name'],
+                 "network_label": raw_attrs['network_interface.0.label'],
+                 "uuid": raw_attrs['uuid'], "vcpu": raw_attrs['vcpu']})
+            TERRAFORM_VMS.append(vm)
+
 for vm in TERRAFORM_VMS:
     pub_ips = []
     _vm = {}
@@ -81,19 +93,37 @@ for vm in TERRAFORM_VMS:
              "vm_size": vm['vm_size']})
         TERRAFORM_INVENTORY.append(_vm)
 
-# Reset TERRAFORM_VMS for new collection
+    elif vm['data_type'] == "vsphere_virtual_machine":
+        _vm.update(
+            {"inventory_hostname": vm['name'], "data_type": vm['data_type'],
+             "ansible_host": vm['ansible_host'],
+             "mac_address": vm['mac_address'], "memory": vm['memory'],
+             "network_label": vm['network_label'],
+             "uuid": vm['uuid'], "vcpu": vm['vcpu']}
+        )
+        TERRAFORM_INVENTORY.append(_vm)
+
+        # Reset TERRAFORM_VMS for new collection
 TERRAFORM_VMS = {}
 TERRAFORM_VMS['terraform_vms'] = {}
 TERRAFORM_VMS['terraform_vms']['hosts'] = {}
 
 for vm in TERRAFORM_INVENTORY:
     TERRAFORM_VMS['terraform_vms']['hosts'][vm['inventory_hostname']] = {}
-    TERRAFORM_VMS['terraform_vms']['hosts'][vm['inventory_hostname']].update(
-        {"ansible_host": vm['ansible_host'], "data_type": vm['data_type'],
-         "location": vm['location'], "private_ips": vm['private_ips'],
-         "public_ips": vm['public_ips'],
-         "resource_group_name": vm['resource_group_name'],
-         "vm_size": vm['vm_size']})
+    if vm['data_type'] == "azurerm_virtual_machine":
+        TERRAFORM_VMS['terraform_vms']['hosts'][vm['inventory_hostname']].update(
+            {"ansible_host": vm['ansible_host'], "data_type": vm['data_type'],
+             "location": vm['location'], "private_ips": vm['private_ips'],
+             "public_ips": vm['public_ips'],
+             "resource_group_name": vm['resource_group_name'],
+             "vm_size": vm['vm_size']})
+    elif vm['data_type'] == "vsphere_virtual_machine":
+        TERRAFORM_VMS['terraform_vms']['hosts'][vm['inventory_hostname']].update(
+            {"ansible_host": vm['ansible_host'], "data_type": vm['data_type'],
+             "mac_address": vm['mac_address'], "memory": int(vm['memory']),
+             "network_label": vm['network_label'], "uuid": vm['uuid'],
+             "vcpu": int(vm['vcpu'])}
+        )
 
 TERRAFORM_VMS = yaml.load(json.dumps(TERRAFORM_VMS))
 
