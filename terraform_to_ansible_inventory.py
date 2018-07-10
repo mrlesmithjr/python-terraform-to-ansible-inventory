@@ -55,8 +55,8 @@ with open(TERRAFORM_TFSTATE) as json_file:
             vm = {}
             raw_attrs = DATA['primary']['attributes']
             vm.update(
-                {"name": raw_attrs['name'], "id": raw_attrs['id'],
-                 "location": raw_attrs['location'],
+                {"data_type": DATA['type'], "name": raw_attrs['name'],
+                 "id": raw_attrs['id'], "location": raw_attrs['location'],
                  "resource_group_name": raw_attrs['resource_group_name'],
                  "vm_size": raw_attrs['vm_size']})
             TERRAFORM_VMS.append(vm)
@@ -64,21 +64,22 @@ with open(TERRAFORM_TFSTATE) as json_file:
 for vm in TERRAFORM_VMS:
     pub_ips = []
     _vm = {}
-    for interface in TERRAFORM_NETWORK_INTERFACES:
-        if interface['virtual_machine_id'] == vm['id']:
-            for pub_ip in TERRAFORM_PUBLIC_IPS:
-                if pub_ip['id'] in interface['public_ips']:
-                    if pub_ip['ip_address'] not in pub_ips:
-                        pub_ips.append(pub_ip['ip_address'])
-    _vm.update(
-        {"inventory_hostname": vm['name'],
-         "ansible_host": interface['private_ip_address'],
-         "location": vm['location'],
-         "private_ips": interface['private_ips'],
-         "public_ips": pub_ips,
-         "resource_group_name": vm['resource_group_name'],
-         "vm_size": vm['vm_size']})
-    TERRAFORM_INVENTORY.append(_vm)
+    if vm['data_type'] == "azurerm_virtual_machine":
+        for interface in TERRAFORM_NETWORK_INTERFACES:
+            if interface['virtual_machine_id'] == vm['id']:
+                for pub_ip in TERRAFORM_PUBLIC_IPS:
+                    if pub_ip['id'] in interface['public_ips']:
+                        if pub_ip['ip_address'] not in pub_ips:
+                            pub_ips.append(pub_ip['ip_address'])
+        _vm.update(
+            {"inventory_hostname": vm['name'], "data_type": vm['data_type'],
+             "ansible_host": interface['private_ip_address'],
+             "location": vm['location'],
+             "private_ips": interface['private_ips'],
+             "public_ips": pub_ips,
+             "resource_group_name": vm['resource_group_name'],
+             "vm_size": vm['vm_size']})
+        TERRAFORM_INVENTORY.append(_vm)
 
 # Reset TERRAFORM_VMS for new collection
 TERRAFORM_VMS = {}
@@ -88,8 +89,9 @@ TERRAFORM_VMS['terraform_vms']['hosts'] = {}
 for vm in TERRAFORM_INVENTORY:
     TERRAFORM_VMS['terraform_vms']['hosts'][vm['inventory_hostname']] = {}
     TERRAFORM_VMS['terraform_vms']['hosts'][vm['inventory_hostname']].update(
-        {"ansible_host": vm['ansible_host'], "location": vm['location'],
-         "private_ips": vm['private_ips'], "public_ips": vm['public_ips'],
+        {"ansible_host": vm['ansible_host'], "data_type": vm['data_type'],
+         "location": vm['location'], "private_ips": vm['private_ips'],
+         "public_ips": vm['public_ips'],
          "resource_group_name": vm['resource_group_name'],
          "vm_size": vm['vm_size']})
 
