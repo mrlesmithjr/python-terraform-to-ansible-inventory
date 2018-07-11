@@ -26,6 +26,22 @@ tags {
 
 ## Example Inventories
 
+### AWS
+
+```yaml
+terraform_vms:
+  hosts:
+    ubuntu_zesty:
+      ami: ami-6b7f610f
+      ansible_host: 172.31.0.208
+      availability_zone: eu-west-2a
+      data_type: aws_instance
+      instance_type: t2.micro
+      private_ip: 172.31.0.208
+      public_ip: 52.56.204.79
+  vars: {}
+```
+
 ### Azure
 
 ```yaml
