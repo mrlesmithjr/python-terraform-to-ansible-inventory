@@ -46,6 +46,22 @@ def main():
         TERRAFORM_INVENTORY, TERRAFORM_LOAD_BALANCERS)
 
 
+def aws_instance(DATA, NAME, TERRAFORM_VMS):
+    vm = {}
+    ansible_groups = []
+    raw_attrs = DATA['primary']['attributes']
+    vm_name = NAME.split('.')[1]
+    vm.update({"ansible_host": raw_attrs['private_ip'],
+               "data_type": DATA['type'], "name": vm_name,
+               "ami": raw_attrs['ami'],
+               "ansible_groups": ansible_groups,
+               "availability_zone": raw_attrs['availability_zone'],
+               "instance_type": raw_attrs['instance_type'],
+               "private_ip": raw_attrs['private_ip'],
+               "public_ip": raw_attrs['public_ip']})
+    TERRAFORM_VMS.append(vm)
+
+
 def azurerm_network_interface(DATA, TERRAFORM_NETWORK_INTERFACES):
     interface = {}
     private_ips = []
@@ -133,6 +149,18 @@ def build_terraform_inventory(TERRAFORM_INVENTORY,
     for vm in TERRAFORM_VMS:
         pub_ips = []
         _vm = {}
+        if vm['data_type'] == "aws_instance":
+            _vm.update({"inventory_hostname": vm['name'],
+                        "data_type": vm['data_type'],
+                        "ami": vm['ami'],
+                        "ansible_host": vm['ansible_host'],
+                        "ansible_groups": vm['ansible_groups'],
+                        "availability_zone": vm['availability_zone'],
+                        "instance_type": vm['instance_type'],
+                        "private_ip": vm['private_ip'],
+                        "public_ip": vm['public_ip']})
+            TERRAFORM_INVENTORY.append(_vm)
+
         if vm['data_type'] == "azurerm_virtual_machine":
             for interface in TERRAFORM_NETWORK_INTERFACES:
                 if interface['virtual_machine_id'] == vm['id']:
@@ -141,18 +169,21 @@ def build_terraform_inventory(TERRAFORM_INVENTORY,
                             if pub_ip['ip_address'] not in pub_ips:
                                 pub_ips.append(pub_ip['ip_address'])
                         _vm.update(
-                            {"inventory_hostname": vm['name'], "data_type": vm['data_type'],
+                            {"inventory_hostname": vm['name'],
+                             "data_type": vm['data_type'],
                              "ansible_host": interface['private_ip_address'],
                              "location": vm['location'],
                              "private_ips": interface['private_ips'],
                              "public_ips": pub_ips,
                              "resource_group_name": vm['resource_group_name'],
-                             "vm_size": vm['vm_size'], "ansible_groups": vm['ansible_groups']})
+                             "vm_size": vm['vm_size'],
+                             "ansible_groups": vm['ansible_groups']})
                         TERRAFORM_INVENTORY.append(_vm)
 
         elif vm['data_type'] == "vsphere_virtual_machine":
             _vm.update(
-                {"inventory_hostname": vm['name'], "data_type": vm['data_type'],
+                {"inventory_hostname": vm['name'],
+                 "data_type": vm['data_type'],
                  "ansible_host": vm['ansible_host'],
                  "mac_address": vm['mac_address'], "memory": vm['memory'],
                  "network_label": vm['network_label'],
@@ -178,7 +209,15 @@ def generate_terraform_inventory(TERRAFORM_ANSIBLE_GROUPS,
 
     for vm in TERRAFORM_INVENTORY:
         TERRAFORM_VMS['terraform_vms']['hosts'][vm['inventory_hostname']] = {}
-        if vm['data_type'] == "azurerm_virtual_machine":
+        if vm['data_type'] == "aws_instance":
+            TERRAFORM_VMS['terraform_vms']['hosts'][vm['inventory_hostname']].update(
+                {"ansible_host": vm['ansible_host'],
+                 "ami": vm['ami'],
+                 "availability_zone": vm['availability_zone'],
+                 "data_type": vm['data_type'],
+                 "instance_type": vm['instance_type'],
+                 "private_ip": vm['private_ip'], "public_ip": vm['public_ip']})
+        elif vm['data_type'] == "azurerm_virtual_machine":
             TERRAFORM_VMS['terraform_vms']['hosts'][vm['inventory_hostname']].update(
                 {"ansible_host": vm['ansible_host'], "data_type": vm['data_type'],
                  "location": vm['location'], "private_ips": vm['private_ips'],
@@ -192,6 +231,7 @@ def generate_terraform_inventory(TERRAFORM_ANSIBLE_GROUPS,
                  "network_label": vm['network_label'], "uuid": vm['uuid'],
                  "vcpu": int(vm['vcpu'])}
             )
+
         for group in vm['ansible_groups']:
             TERRAFORM_VMS[group]['hosts'][vm['inventory_hostname']] = {}
 
@@ -228,6 +268,9 @@ def parse_terraform_tfstate(TERRAFORM_ANSIBLE_GROUPS,
         DATA = json.load(json_file)
         RESOURCES = DATA['modules'][0]['resources']
         for NAME, DATA in RESOURCES.items():
+            if DATA['type'] == "aws_instance":
+                aws_instance(DATA, NAME, TERRAFORM_VMS)
+
             if DATA['type'] == "azurerm_network_interface":
                 azurerm_network_interface(DATA, TERRAFORM_NETWORK_INTERFACES)
 
