@@ -196,8 +196,9 @@ def generate_terraform_inventory(TERRAFORM_ANSIBLE_GROUPS,
             TERRAFORM_VMS[group]['hosts'][vm['inventory_hostname']] = {}
 
     TERRAFORM_VMS['terraform_vms']['vars'] = {}
-    TERRAFORM_VMS['terraform_vms']['vars'].update(
-        {"terraform_load_balancers": TERRAFORM_LOAD_BALANCERS})
+    if TERRAFORM_LOAD_BALANCERS != []:
+        TERRAFORM_VMS['terraform_vms']['vars'].update(
+            {"terraform_load_balancers": TERRAFORM_LOAD_BALANCERS})
 
     TERRAFORM_VMS = yaml.load(json.dumps(TERRAFORM_VMS))
 
