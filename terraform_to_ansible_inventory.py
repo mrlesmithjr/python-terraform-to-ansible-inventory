@@ -48,6 +48,7 @@ def main():
 
 
 def aws_instance(DATA, NAME, TERRAFORM_VMS):
+    """Populate AWS VM info."""
     vm = {}
     ansible_groups = []
     raw_attrs = DATA['primary']['attributes']
@@ -64,6 +65,7 @@ def aws_instance(DATA, NAME, TERRAFORM_VMS):
 
 
 def azurerm_network_interface(DATA, TERRAFORM_NETWORK_INTERFACES):
+    """Populate Azure network interface info."""
     interface = {}
     private_ips = []
     public_ips = []
@@ -83,6 +85,7 @@ def azurerm_network_interface(DATA, TERRAFORM_NETWORK_INTERFACES):
 
 
 def azurerm_public_ip(DATA, TERRAFORM_PUBLIC_IPS):
+    """Populate Azure public IP info."""
     public_ip = {}
     raw_attrs = DATA['primary']['attributes']
     public_ip.update({"id": raw_attrs['id'],
@@ -91,11 +94,13 @@ def azurerm_public_ip(DATA, TERRAFORM_PUBLIC_IPS):
 
 
 def azurerm_lb(DATA, TERRAFORM_LOAD_BALANCERS, TERRAFORM_PUBLIC_IPS):
+    """Populate Azure LB info."""
     raw_attrs = DATA['primary']['attributes']
     load_balancer = {}
     public_ip_address = ""
     for pub_ip in TERRAFORM_PUBLIC_IPS:
-        public_ip_address_id = raw_attrs['frontend_ip_configuration.0.public_ip_address_id']
+        public_ip_address_id = (
+            raw_attrs['frontend_ip_configuration.0.public_ip_address_id'])
         if pub_ip['id'] == public_ip_address_id:
             public_ip_address = pub_ip['ip_address']
     load_balancer.update({"location": raw_attrs['location'],
@@ -107,6 +112,7 @@ def azurerm_lb(DATA, TERRAFORM_LOAD_BALANCERS, TERRAFORM_PUBLIC_IPS):
 
 
 def azurerm_virtual_machine(DATA, TERRAFORM_ANSIBLE_GROUPS, TERRAFORM_VMS):
+    """Populate Azure VM info."""
     vm = {}
     raw_attrs = DATA['primary']['attributes']
     try:
@@ -129,6 +135,7 @@ def azurerm_virtual_machine(DATA, TERRAFORM_ANSIBLE_GROUPS, TERRAFORM_VMS):
 
 
 def vsphere_virtual_machine(DATA, TERRAFORM_VMS):
+    """Populate vSphere VM info."""
     vm = {}
     ansible_groups = []
     raw_attrs = DATA['primary']['attributes']
@@ -146,7 +153,7 @@ def vsphere_virtual_machine(DATA, TERRAFORM_VMS):
 def build_terraform_inventory(TERRAFORM_DATA_TYPES, TERRAFORM_INVENTORY,
                               TERRAFORM_NETWORK_INTERFACES,
                               TERRAFORM_PUBLIC_IPS, TERRAFORM_VMS):
-
+    """Build Terraform inventory structure."""
     for vm in TERRAFORM_VMS:
         pub_ips = []
         _vm = {}
@@ -183,11 +190,9 @@ def generate_terraform_inventory(TERRAFORM_ANSIBLE_GROUPS,
                                  TERRAFORM_ANSIBLE_INVENTORY,
                                  TERRAFORM_DATA_TYPES, TERRAFORM_INVENTORY,
                                  TERRAFORM_LOAD_BALANCERS):
-
+    """Generate Terraform inventory for Ansible and write to inventory file."""
     # Reset TERRAFORM_VMS for new collection
     TERRAFORM_VMS = {}
-    TERRAFORM_VMS['terraform_vms'] = {}
-    TERRAFORM_VMS['terraform_vms']['hosts'] = {}
 
     for group in TERRAFORM_ANSIBLE_GROUPS:
         TERRAFORM_VMS[group] = {}
@@ -196,6 +201,9 @@ def generate_terraform_inventory(TERRAFORM_ANSIBLE_GROUPS,
     for data_type in TERRAFORM_DATA_TYPES:
         TERRAFORM_VMS[data_type] = {}
         TERRAFORM_VMS[data_type]['hosts'] = {}
+
+    TERRAFORM_VMS['terraform_vms'] = {}
+    TERRAFORM_VMS['terraform_vms']['hosts'] = {}
 
     for vm in TERRAFORM_INVENTORY:
         TERRAFORM_VMS[vm['data_type']]['hosts'].update(
@@ -218,7 +226,7 @@ def generate_terraform_inventory(TERRAFORM_ANSIBLE_GROUPS,
 
 
 def parse_args():
-
+    """Parse command line arguments."""
     PARSER = argparse.ArgumentParser()
     PARSER.add_argument("-i", "--inventory", help="Ansible inventory",
                         default="./terraform_inventory.yml")
@@ -234,7 +242,7 @@ def parse_terraform_tfstate(TERRAFORM_ANSIBLE_GROUPS,
                             TERRAFORM_PUBLIC_IPS,
                             TERRAFORM_TFSTATE,
                             TERRAFORM_VMS):
-
+    """Parse terraform.tfstate."""
     with open(TERRAFORM_TFSTATE) as json_file:
         DATA = json.load(json_file)
         RESOURCES = DATA['modules'][0]['resources']
