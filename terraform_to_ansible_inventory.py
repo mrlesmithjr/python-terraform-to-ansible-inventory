@@ -17,7 +17,7 @@ __status__ = "Development"
 
 
 def main():
-
+    """The main execution of script."""
     ARGS = parse_args()
 
     SCRIPT_PATH = os.path.dirname(os.path.abspath(__file__))
@@ -45,6 +45,49 @@ def main():
     generate_terraform_inventory(
         TERRAFORM_ANSIBLE_GROUPS, TERRAFORM_ANSIBLE_INVENTORY,
         TERRAFORM_DATA_TYPES, TERRAFORM_INVENTORY, TERRAFORM_LOAD_BALANCERS)
+
+
+def parse_args():
+    """Parse command line arguments."""
+    PARSER = argparse.ArgumentParser()
+    PARSER.add_argument("-i", "--inventory", help="Ansible inventory",
+                        default="./terraform_inventory.yml")
+    PARSER.add_argument("-t", "--tfstate", help="Terraform tftstate file",
+                        default="./terraform.tfstate")
+    ARGS = PARSER.parse_args()
+    return ARGS
+
+
+def parse_terraform_tfstate(TERRAFORM_ANSIBLE_GROUPS,
+                            TERRAFORM_NETWORK_INTERFACES,
+                            TERRAFORM_LOAD_BALANCERS,
+                            TERRAFORM_PUBLIC_IPS,
+                            TERRAFORM_TFSTATE,
+                            TERRAFORM_VMS):
+    """Parse terraform.tfstate."""
+    with open(TERRAFORM_TFSTATE) as json_file:
+        DATA = json.load(json_file)
+        RESOURCES = DATA['modules'][0]['resources']
+        for NAME, DATA in RESOURCES.items():
+            if DATA['type'] == "aws_instance":
+                aws_instance(DATA, NAME, TERRAFORM_VMS)
+
+            if DATA['type'] == "azurerm_network_interface":
+                azurerm_network_interface(DATA, TERRAFORM_NETWORK_INTERFACES)
+
+            elif DATA['type'] == "azurerm_public_ip":
+                azurerm_public_ip(DATA, TERRAFORM_PUBLIC_IPS)
+
+            elif DATA['type'] == "azurerm_lb":
+                azurerm_lb(DATA, TERRAFORM_LOAD_BALANCERS,
+                           TERRAFORM_PUBLIC_IPS)
+
+            elif DATA['type'] == "azurerm_virtual_machine":
+                azurerm_virtual_machine(
+                    DATA, TERRAFORM_ANSIBLE_GROUPS, TERRAFORM_VMS)
+
+            elif DATA['type'] == "vsphere_virtual_machine":
+                vsphere_virtual_machine(DATA, TERRAFORM_VMS)
 
 
 def aws_instance(DATA, NAME, TERRAFORM_VMS):
@@ -223,49 +266,6 @@ def generate_terraform_inventory(TERRAFORM_ANSIBLE_GROUPS,
 
     with open(TERRAFORM_ANSIBLE_INVENTORY, 'w') as yaml_file:
         yaml.dump(TERRAFORM_VMS, yaml_file, default_flow_style=False)
-
-
-def parse_args():
-    """Parse command line arguments."""
-    PARSER = argparse.ArgumentParser()
-    PARSER.add_argument("-i", "--inventory", help="Ansible inventory",
-                        default="./terraform_inventory.yml")
-    PARSER.add_argument("-t", "--tfstate", help="Terraform tftstate file",
-                        default="./terraform.tfstate")
-    ARGS = PARSER.parse_args()
-    return ARGS
-
-
-def parse_terraform_tfstate(TERRAFORM_ANSIBLE_GROUPS,
-                            TERRAFORM_NETWORK_INTERFACES,
-                            TERRAFORM_LOAD_BALANCERS,
-                            TERRAFORM_PUBLIC_IPS,
-                            TERRAFORM_TFSTATE,
-                            TERRAFORM_VMS):
-    """Parse terraform.tfstate."""
-    with open(TERRAFORM_TFSTATE) as json_file:
-        DATA = json.load(json_file)
-        RESOURCES = DATA['modules'][0]['resources']
-        for NAME, DATA in RESOURCES.items():
-            if DATA['type'] == "aws_instance":
-                aws_instance(DATA, NAME, TERRAFORM_VMS)
-
-            if DATA['type'] == "azurerm_network_interface":
-                azurerm_network_interface(DATA, TERRAFORM_NETWORK_INTERFACES)
-
-            elif DATA['type'] == "azurerm_public_ip":
-                azurerm_public_ip(DATA, TERRAFORM_PUBLIC_IPS)
-
-            elif DATA['type'] == "azurerm_lb":
-                azurerm_lb(DATA, TERRAFORM_LOAD_BALANCERS,
-                           TERRAFORM_PUBLIC_IPS)
-
-            elif DATA['type'] == "azurerm_virtual_machine":
-                azurerm_virtual_machine(
-                    DATA, TERRAFORM_ANSIBLE_GROUPS, TERRAFORM_VMS)
-
-            elif DATA['type'] == "vsphere_virtual_machine":
-                vsphere_virtual_machine(DATA, TERRAFORM_VMS)
 
 
 if __name__ == "__main__":
