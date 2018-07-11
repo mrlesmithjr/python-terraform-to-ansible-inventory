@@ -19,6 +19,7 @@ SCRIPT_PATH = os.path.dirname(os.path.abspath(__file__))
 TERRAFORM_INVENTORY = []
 TERRAFORM_ANSIBLE_GROUPS = []
 TERRAFORM_ANSIBLE_INVENTORY = ("%s/" + ARGS.inventory) % SCRIPT_PATH
+TERRAFORM_LOAD_BALANCERS = []
 TERRAFORM_NETWORK_INTERFACES = []
 TERRAFORM_PUBLIC_IPS = []
 TERRAFORM_TFSTATE = ("%s/" + ARGS.tfstate) % SCRIPT_PATH
@@ -52,6 +53,21 @@ with open(TERRAFORM_TFSTATE) as json_file:
             public_ip.update({"id": raw_attrs['id'],
                               "ip_address": raw_attrs['ip_address']})
             TERRAFORM_PUBLIC_IPS.append(public_ip)
+
+        if DATA['type'] == "azurerm_lb":
+            raw_attrs = DATA['primary']['attributes']
+            load_balancer = {}
+            public_ip_address = ""
+            for pub_ip in TERRAFORM_PUBLIC_IPS:
+                public_ip_address_id = raw_attrs['frontend_ip_configuration.0.public_ip_address_id']
+                if pub_ip['id'] == public_ip_address_id:
+                    public_ip_address = pub_ip['ip_address']
+            load_balancer.update({"location": raw_attrs['location'],
+                                  "name": raw_attrs['name'],
+                                  "public_ip_address": public_ip_address,
+                                  "sku": raw_attrs['sku'],
+                                  "type": "azurerm_lb"})
+            TERRAFORM_LOAD_BALANCERS.append(load_balancer)
 
         if DATA['type'] == "azurerm_virtual_machine":
             vm = {}
@@ -143,6 +159,9 @@ for vm in TERRAFORM_INVENTORY:
         )
     for tag in vm['ansible_groups']:
         TERRAFORM_VMS[tag]['hosts'][vm['inventory_hostname']] = {}
+
+TERRAFORM_VMS['terraform_vms']['vars'] = {}
+TERRAFORM_VMS['terraform_vms']['vars']['terraform_load_balancers'] = TERRAFORM_LOAD_BALANCERS
 
 TERRAFORM_VMS = yaml.load(json.dumps(TERRAFORM_VMS))
 

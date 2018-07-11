@@ -68,6 +68,13 @@ terraform_vms:
       public_ips: []
       resource_group_name: acctestrg
       vm_size: Standard_B1s
+  vars:
+    terraform_load_balancers:
+    - location: eastus
+      name: TestLoadBalancer
+      public_ip_address: 40.76.73.163
+      sku: Basic
+      type: azurerm_lb
 ```
 
 ### vSphere
@@ -295,6 +302,13 @@ terraform_vms:
       network_label: VSS-VLAN-102
       uuid: 422aae57-67e8-50d8-66f6-3a11bdc87a78
       vcpu: 1
+  vars:
+    terraform_load_balancers:
+    - location: eastus
+      name: TestLoadBalancer
+      public_ip_address: 40.76.73.163
+      sku: Basic
+      type: azurerm_lb
 ```
 
 ### Azure Using Tags For Ansible Groups
@@ -347,6 +361,13 @@ terraform_vms:
       public_ips: []
       resource_group_name: acctestrg
       vm_size: Standard_B1s
+  vars:
+    terraform_load_balancers:
+    - location: eastus
+      name: TestLoadBalancer
+      public_ip_address: 40.76.73.163
+      sku: Basic
+      type: azurerm_lb
 test:
   hosts:
     Jumphost: {}
