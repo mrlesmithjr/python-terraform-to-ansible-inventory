@@ -91,14 +91,17 @@ def azurerm_lb(DATA, TERRAFORM_LOAD_BALANCERS, TERRAFORM_PUBLIC_IPS):
 
 def azurerm_virtual_machine(DATA, TERRAFORM_ANSIBLE_GROUPS, TERRAFORM_VMS):
     vm = {}
-    ansible_groups = []
     raw_attrs = DATA['primary']['attributes']
-    if raw_attrs['tags.ansible_groups']:
+    try:
+        ansible_groups = []
         groups = ast.literal_eval(raw_attrs['tags.ansible_groups'])
         for group in groups:
             ansible_groups.append(group)
             if group not in TERRAFORM_ANSIBLE_GROUPS:
                 TERRAFORM_ANSIBLE_GROUPS.append(group)
+    except KeyError:
+        ansible_groups = []
+
     vm.update(
         {"data_type": DATA['type'], "name": raw_attrs['name'],
          "id": raw_attrs['id'], "location": raw_attrs['location'],
