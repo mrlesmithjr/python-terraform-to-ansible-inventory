@@ -208,6 +208,13 @@ def generate_terraform_inventory(TERRAFORM_ANSIBLE_GROUPS,
         TERRAFORM_VMS[group]['hosts'] = {}
 
     for vm in TERRAFORM_INVENTORY:
+        data_type = vm['data_type']
+        TERRAFORM_VMS[data_type] = {}
+        TERRAFORM_VMS[data_type]['hosts'] = {}
+
+    for vm in TERRAFORM_INVENTORY:
+        TERRAFORM_VMS[vm['data_type']]['hosts'].update(
+            {vm['inventory_hostname']: {}})
         TERRAFORM_VMS['terraform_vms']['hosts'][vm['inventory_hostname']] = {}
         if vm['data_type'] == "aws_instance":
             TERRAFORM_VMS['terraform_vms']['hosts'][vm['inventory_hostname']].update(

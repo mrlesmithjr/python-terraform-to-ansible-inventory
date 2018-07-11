@@ -392,6 +392,38 @@ test:
     acctvm2: {}
 ```
 
+### Groups Created By Data Types
+
+You can also execute Ansible against a specific type by using these groups.
+
+> NOTE: Snippet below excludes all of the additional groups that are created to
+> keep example clean.
+
+```yaml
+aws_instance:
+  hosts:
+    ubuntu_zesty: {}
+azurerm_virtual_machine:
+  hosts:
+    Jumphost: {}
+    acctvm0: {}
+    acctvm1: {}
+    acctvm2: {}
+vsphere_virtual_machine:
+  hosts:
+    docker-lb-01.lab.etsbv.internal: {}
+    docker-lb-02.lab.etsbv.internal: {}
+    docker-mgr-01.lab.etsbv.internal: {}
+    docker-mgr-02.lab.etsbv.internal: {}
+    docker-mgr-03.lab.etsbv.internal: {}
+    docker-storage-01.lab.etsbv.internal: {}
+    docker-storage-02.lab.etsbv.internal: {}
+    docker-wrk-01.lab.etsbv.internal: {}
+    docker-wrk-02.lab.etsbv.internal: {}
+    docker-wrk-03.lab.etsbv.internal: {}
+    docker-wrk-04.lab.etsbv.internal: {}
+```
+
 ## License
 
 MIT
