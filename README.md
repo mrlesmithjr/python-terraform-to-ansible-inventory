@@ -480,7 +480,15 @@ target a resource we can do so as seen below:
         targets: "{{ hostvars[item]['target'] }}"
       register: _terraform_execution_destroy
       with_items: "{{ groups['terraform_vms'] }}"
-      when: terraform_destroy
+      when: >
+            groups['terraform_vms'] is defined and
+            terraform_destroy
+```
+
+Playbook execution:
+
+```bash
+ansible-playbook -i terraform_inventory.yml playbook.yml --extra-vars "terraform_destroy=True" --limit acctvm0
 ```
 
 ## License
