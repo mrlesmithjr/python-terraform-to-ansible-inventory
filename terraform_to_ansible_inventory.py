@@ -67,27 +67,31 @@ def parse_terraform_tfstate(TERRAFORM_ANSIBLE_GROUPS,
     """Parse terraform.tfstate."""
     with open(TERRAFORM_TFSTATE) as json_file:
         DATA = json.load(json_file)
-        RESOURCES = DATA['modules'][0]['resources']
-        for NAME, DATA in RESOURCES.items():
-            if DATA['type'] == "aws_instance":
-                aws_instance(DATA, NAME, TERRAFORM_VMS)
+        DATA_MODULES = DATA['modules']
+        print "Processing %s different module elements." % len(DATA_MODULES)
+        for ELEMENT in range(len(DATA_MODULES)):
+            RESOURCES = DATA_MODULES[ELEMENT]['resources']
+            for NAME, DATA in RESOURCES.items():
+                if DATA['type'] == "aws_instance":
+                    aws_instance(DATA, NAME, TERRAFORM_VMS)
 
-            if DATA['type'] == "azurerm_network_interface":
-                azurerm_network_interface(DATA, TERRAFORM_NETWORK_INTERFACES)
+                if DATA['type'] == "azurerm_network_interface":
+                    azurerm_network_interface(
+                        DATA, TERRAFORM_NETWORK_INTERFACES)
 
-            elif DATA['type'] == "azurerm_public_ip":
-                azurerm_public_ip(DATA, TERRAFORM_PUBLIC_IPS)
+                elif DATA['type'] == "azurerm_public_ip":
+                    azurerm_public_ip(DATA, TERRAFORM_PUBLIC_IPS)
 
-            elif DATA['type'] == "azurerm_lb":
-                azurerm_lb(DATA, TERRAFORM_LOAD_BALANCERS,
-                           TERRAFORM_PUBLIC_IPS)
+                elif DATA['type'] == "azurerm_lb":
+                    azurerm_lb(DATA, TERRAFORM_LOAD_BALANCERS,
+                               TERRAFORM_PUBLIC_IPS)
 
-            elif DATA['type'] == "azurerm_virtual_machine":
-                azurerm_virtual_machine(
-                    DATA, TERRAFORM_ANSIBLE_GROUPS, TERRAFORM_VMS)
+                elif DATA['type'] == "azurerm_virtual_machine":
+                    azurerm_virtual_machine(
+                        DATA, TERRAFORM_ANSIBLE_GROUPS, TERRAFORM_VMS)
 
-            elif DATA['type'] == "vsphere_virtual_machine":
-                vsphere_virtual_machine(DATA, TERRAFORM_VMS)
+                elif DATA['type'] == "vsphere_virtual_machine":
+                    vsphere_virtual_machine(DATA, TERRAFORM_VMS)
 
 
 def aws_instance(DATA, NAME, TERRAFORM_VMS):
