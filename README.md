@@ -424,6 +424,65 @@ vsphere_virtual_machine:
     docker-wrk-04.lab.etsbv.internal: {}
 ```
 
+## Ansible Terraform Module Usage
+
+When using the terraform Ansible module you have the ability to specify
+`target` which can be a single target or a list of targets. This is particularly
+useful when your infrastructure is already provisioned and you would like to
+destroy targets. We now add the actual Terraform target as a host variable named
+`target` as seen in the example below:
+
+```yaml
+terraform_vms:
+  hosts:
+    acctvm0:
+      ansible_groups:
+      - test
+      - consul_cluster
+      ansible_host: 10.0.2.4
+      data_type: azurerm_virtual_machine
+      inventory_hostname: acctvm0
+      location: eastus
+      private_ips:
+      - 10.0.2.4
+      public_ips: []
+      resource_group_name: acctestrg
+      target: azurerm_virtual_machine.acctvm0
+      vm_size: Standard_B1s
+```
+
+Now if you would like to leverage the Terraform Ansible module to specifically
+target a resource we can do so as seen below:
+
+`playbook.yml`:
+
+```yaml
+---
+- hosts: localhost
+  gather_facts: false
+  become: false
+  vars:
+    scripts_dir: ../../scripts
+    terraform_destroy: false
+    terraform_project_path: ../../Terraform
+  tasks:
+    - name: Execute Terraform (Provision)
+      terraform:
+        project_path: "{{ terraform_project_path }}"
+        state: present
+      register: _terraform_execution_provision
+      when: not terraform_destroy
+
+    - name: Execute Terraform (Destroy VMs Only)
+      terraform:
+        project_path: "{{ terraform_project_path }}"
+        state: absent
+        targets: "{{ hostvars[item]['target'] }}"
+      register: _terraform_execution_destroy
+      with_items: "{{ groups['terraform_vms'] }}"
+      when: terraform_destroy
+```
+
 ## License
 
 MIT

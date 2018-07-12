@@ -176,6 +176,7 @@ def azurerm_virtual_machine(DATA, TERRAFORM_ANSIBLE_GROUPS, TERRAFORM_VMS):
         {"data_type": DATA['type'], "inventory_hostname": raw_attrs['name'],
          "id": raw_attrs['id'], "location": raw_attrs['location'],
          "resource_group_name": raw_attrs['resource_group_name'],
+         "target": DATA['type'] + "." + raw_attrs['name'],
          "vm_size": raw_attrs['vm_size'],
          "ansible_groups": ansible_groups})
     TERRAFORM_VMS.append(vm)
@@ -192,6 +193,7 @@ def vsphere_virtual_machine(DATA, TERRAFORM_VMS):
          "mac_address": raw_attrs['network_interface.0.mac_address'],
          "memory": raw_attrs['memory'], "inventory_hostname": raw_attrs['name'],
          "network_label": raw_attrs['network_interface.0.label'],
+         "target": DATA['type'] + "." + raw_attrs['name'],
          "uuid": raw_attrs['uuid'], "vcpu": raw_attrs['vcpu'],
          "ansible_groups": ansible_groups})
     TERRAFORM_VMS.append(vm)
@@ -225,6 +227,7 @@ def build_terraform_inventory(TERRAFORM_DATA_TYPES, TERRAFORM_INVENTORY,
                              "private_ips": interface['private_ips'],
                              "public_ips": pub_ips,
                              "resource_group_name": vm['resource_group_name'],
+                             "target": vm['target'],
                              "vm_size": vm['vm_size'],
                              "ansible_groups": vm['ansible_groups']})
                         TERRAFORM_INVENTORY.append(_vm)
