@@ -449,6 +449,20 @@ terraform_vms:
       resource_group_name: acctestrg
       target: azurerm_virtual_machine.acctvm0
       vm_size: Standard_B1s
+    acctvm1:
+      ansible_groups:
+      - test
+      - consul_cluster
+      ansible_host: 10.0.2.7
+      data_type: azurerm_virtual_machine
+      inventory_hostname: acctvm1
+      location: eastus
+      private_ips:
+      - 10.0.2.7
+      public_ips: []
+      resource_group_name: acctestrg
+      target: azurerm_virtual_machine.acctvm1
+      vm_size: Standard_B1s
 ```
 
 Now if you would like to leverage the Terraform Ansible module to specifically
@@ -464,6 +478,7 @@ target a resource we can do so as seen below:
   vars:
     scripts_dir: ../../scripts
     terraform_destroy: false
+    terraform_destroy_vms: []
     terraform_project_path: ../../Terraform
   tasks:
     - name: Execute Terraform (Provision)
@@ -477,18 +492,41 @@ target a resource we can do so as seen below:
       terraform:
         project_path: "{{ terraform_project_path }}"
         state: absent
-        targets: "{{ hostvars[item]['target'] }}"
+        targets: "{{ terraform_destroy_vms | map('extract', hostvars, ['target']) | join(',') }}"
       register: _terraform_execution_destroy
-      with_items: "{{ groups['terraform_vms'] }}"
       when: >
-            groups['terraform_vms'] is defined and
+            terraform_destroy_vms != [] and
             terraform_destroy
 ```
 
 Playbook execution:
 
+First run in check mode to ensure your results are as expected.
+
 ```bash
-ansible-playbook -i terraform_inventory.yml playbook.yml --extra-vars "terraform_destroy=True" --limit acctvm0
+ansible-playbook -i Ansible/inventory Ansible/playbooks/terraform.yml --extra-vars "{'terraform_destroy': true,'terraform_destroy_vms': ['acctvm0', 'acctvm1']}" --check
+...
+TASK [Terraform Results (Destroy VMs Only)] ****************************************************************************************************************************************************************************************************************************************************************************
+ok: [localhost] => {
+    "_terraform_execution_destroy": {
+        "changed": false,
+        "command": "/usr/local/bin/terraform destroy -no-color -force -lock=true -target azurerm_virtual_machine.acctvm0 -target azurerm_virtual_machine.acctvm1",
+        "failed": false,
+        "outputs": {
+        },
+        "state": "absent",
+        "stderr": "",
+        "stderr_lines": [],
+        "stdout": "",
+        "stdout_lines": []
+    }
+}
+```
+
+Now run normally after validating in check mode.
+
+```bash
+ansible-playbook -i Ansible/inventory Ansible/playbooks/terraform.yml --extra-vars "{'terraform_destroy': true,'terraform_destroy_vms': ['acctvm0', 'acctvm1']}"
 ```
 
 ## License
