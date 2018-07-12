@@ -529,6 +529,12 @@ Now run normally after validating in check mode.
 ansible-playbook -i Ansible/inventory Ansible/playbooks/terraform.yml --extra-vars "{'terraform_destroy': true,'terraform_destroy_vms': ['acctvm0', 'acctvm1']}"
 ```
 
+If you would like to destroy all VMs in an Ansible group:
+
+```bash
+ansible-playbook -i Ansible/inventory Ansible/playbooks/terraform.yml --extra-vars "{'terraform_destroy': true,'terraform_destroy_vms': '{{ groups.consul_cluster }}'}" --check
+```
+
 ## License
 
 MIT
