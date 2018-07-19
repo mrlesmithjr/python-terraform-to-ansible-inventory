@@ -18,13 +18,9 @@ tags {
 }
 ```
 
-## Execution
-
-```bash
-python example.py -t Terraform/terraform.tfstate -i Ansible/inventory/terraform_inventory.yml
-```
-
 ## Installation
+
+### Manual
 
 You can manually install this package by executing the following:
 
@@ -32,8 +28,30 @@ You can manually install this package by executing the following:
 python setup.py install
 ```
 
+### Using pip
+
+You can also install using `pip`:
+
+```bash
+pip install TerraformToAnsibleInventory
+```
+
 After installation, you can then use this package from anywhere within your
 terminal session.
+
+```bash
+TerraformToAnsibleInventory -t terraform.tfstate.vsphere -i terraform_inventory.yml
+```
+
+## Execution
+
+### Without installing
+
+```bash
+python example.py -t Terraform/terraform.tfstate -i Ansible/inventory/terraform_inventory.yml
+```
+
+### After installing
 
 ```bash
 TerraformToAnsibleInventory -t terraform.tfstate.vsphere -i terraform_inventory.yml
