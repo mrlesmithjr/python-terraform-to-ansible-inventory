@@ -1,3 +1,29 @@
+### Python ###
+*.pyc
+build/
+dist/
+*.egg-info
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Exclude YAML files
+*.yaml
+*.yml
+
+# Exclude JSON files
+*.json
+
+
+# Terraform
+*.tf
+.terraform
 terraform_inventory.yml
 terraform.tfstate
 terraform.tfstate.*

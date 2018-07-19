@@ -1,0 +1,7 @@
+include TerraformToAnsibleInventory/parsers/__init__.py
+include TerraformToAnsibleInventory/parsers/aws_instance.py
+include TerraformToAnsibleInventory/parsers/azurerm_lb.py
+include TerraformToAnsibleInventory/parsers/azurerm_network_interface.py
+include TerraformToAnsibleInventory/parsers/azurerm_public_ip.py
+include TerraformToAnsibleInventory/parsers/azurerm_virtual_machine.py
+include TerraformToAnsibleInventory/parsers/vsphere_virtual_machine.py
