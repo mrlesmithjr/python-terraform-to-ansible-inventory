@@ -10,7 +10,7 @@ you can also define additional Ansible groups by leveraging tags on your VM
 resources. By default this will currently look for `tags.ansible_groups` which
 can be defined on a resource as below:
 
-> NOTE: Currently only tested on Azure VM resources.
+> NOTE: Currently only limited testing on AWS, Azure, and vSphere resources.
 
 ```json
 tags {
@@ -21,7 +21,22 @@ tags {
 ## Execution
 
 ```bash
-./terraform_to_ansible_inventory.py -t Terraform/terraform.tfstate -i Ansible/inventory/terraform_inventory.yml
+python example.py -t Terraform/terraform.tfstate -i Ansible/inventory/terraform_inventory.yml
+```
+
+## Installation
+
+You can manually install this package by executing the following:
+
+```bash
+python setup.py install
+```
+
+After installation, you can then use this package from anywhere within your
+terminal session.
+
+```bash
+TerraformToAnsibleInventory -t terraform.tfstate.vsphere -i terraform_inventory.yml
 ```
 
 ## Example Inventories
