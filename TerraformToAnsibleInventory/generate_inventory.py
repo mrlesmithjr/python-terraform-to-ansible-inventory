@@ -30,10 +30,16 @@ def ansible(TERRAFORM_ANSIBLE_GROUPS,
         for group in vm['ansible_groups']:
             TERRAFORM_VMS[group]['hosts'][vm['inventory_hostname']] = dict()
 
-    TERRAFORM_VMS['terraform_vms']['vars'] = dict()
+    TERRAFORM_VMS['terraform_load_balancers'] = dict()
+    TERRAFORM_VMS['terraform_load_balancers']['hosts'] = dict()
     if TERRAFORM_LOAD_BALANCERS != []:
-        TERRAFORM_VMS['terraform_vms']['vars'].update(
-            {'terraform_load_balancers': TERRAFORM_LOAD_BALANCERS})
+        for lb in TERRAFORM_LOAD_BALANCERS:
+            TERRAFORM_VMS['terraform_load_balancers']['hosts'].update(
+                {lb['name']: lb})
+            if lb['type'] not in TERRAFORM_VMS:
+                TERRAFORM_VMS[lb['type']] = dict()
+                TERRAFORM_VMS[lb['type']]['hosts'] = dict()
+                TERRAFORM_VMS[lb['type']]['hosts'][lb['name']] = dict()
 
     TERRAFORM_VMS = yaml.load(json.dumps(TERRAFORM_VMS))
 
