@@ -1,7 +1,8 @@
 # python-terraform-to-ansible-inventory
 
-This script will ingest a Terraform tfstate file and generate an Ansible
-inventory for consumption.
+This package is for consuming [Terraform State](https://www.terraform.io/docs/state/),
+parsing the data, and then generating a functional Ansible inventory which can
+then be consumed by Ansible.
 
 ## Ansible Groups
 
@@ -43,18 +44,53 @@ terminal session.
 TerraformToAnsibleInventory -t terraform.tfstate.vsphere -i terraform_inventory.yml
 ```
 
+## Supported Terraform Backends
+
+The following backends are currently supported for consumption.
+
+-   local - A local `terraform.tfstate` file present where executing from.
+-   consul - A Consul environment in which Terraform state is stored.
+
 ## Execution
 
-### Without installing
+You can view help to familiarize yourself with the options available for usage
+by executing:
 
 ```bash
-python example.py -t Terraform/terraform.tfstate -i Ansible/inventory/terraform_inventory.yml
+TerraformToAnsibleInventory --help
+...
+usage: TerraformToAnsibleInventory [-h] [-b {local,consul}] [-cH CONSULHOST] [-cKV CONSULKV]
+                  [-cP CONSULPORT] [-cS {http,https}] [-i INVENTORY]
+                  [-t TFSTATE]
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -b {local,consul}, --backend {local,consul}
+                        Define which Terraform backend to parse
+  -cH CONSULHOST, --consulHost CONSULHOST
+                        Define Consul host when using Consul backend
+  -cKV CONSULKV, --consulKV CONSULKV
+                        Define Consul KV Pair to query. Ex. Azure/Test
+  -cP CONSULPORT, --consulPort CONSULPORT
+                        Define Consul host port
+  -cS {http,https}, --consulScheme {http,https}
+                        Define Consul connection scheme.
+  -i INVENTORY, --inventory INVENTORY
+                        Ansible inventory
+  -t TFSTATE, --tfstate TFSTATE
+                        Terraform tftstate file
 ```
 
-### After installing
+### Using A Local Backend
 
 ```bash
-TerraformToAnsibleInventory -t terraform.tfstate.vsphere -i terraform_inventory.yml
+TerraformToAnsibleInventory -t terraform.tfstate -i terraform_inventory.yml
+```
+
+### Using A Consul Backend
+
+```bash
+TerraformToAnsibleInventory -b consul -cH consul.example.org -cKV Azure/Test -i terraform_inventory.yml
 ```
 
 ## Example Inventories

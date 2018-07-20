@@ -1,11 +1,11 @@
-def parse(DATA, NAME, TERRAFORM_VMS):
+def parse(RESOURCE, NAME, TERRAFORM_VMS):
     """Populate AWS VM info."""
     vm = dict()
     ansible_groups = []
-    raw_attrs = DATA['primary']['attributes']
+    raw_attrs = RESOURCE['primary']['attributes']
     vm_name = NAME.split('.')[1]
     vm.update({'ansible_host': raw_attrs['private_ip'],
-               'data_type': DATA['type'], 'inventory_hostname': vm_name,
+               'data_type': RESOURCE['type'], 'inventory_hostname': vm_name,
                'ami': raw_attrs['ami'],
                'ansible_groups': ansible_groups,
                'availability_zone': raw_attrs['availability_zone'],

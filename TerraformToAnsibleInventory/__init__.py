@@ -20,7 +20,7 @@ TERRAFORM_PUBLIC_IPS = []
 TERRAFORM_TFSTATE = ('%s/' + ARGS.tfstate) % CWD
 TERRAFORM_VMS = []
 
-ParseTerraformTfstate(TERRAFORM_ANSIBLE_GROUPS,
+ParseTerraformTfstate(ARGS, TERRAFORM_ANSIBLE_GROUPS,
                       TERRAFORM_NETWORK_INTERFACES,
                       TERRAFORM_LOAD_BALANCERS,
                       TERRAFORM_PUBLIC_IPS,

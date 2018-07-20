@@ -1,6 +1,6 @@
-def parse(DATA, TERRAFORM_LOAD_BALANCERS, TERRAFORM_PUBLIC_IPS):
+def parse(RESOURCE, TERRAFORM_LOAD_BALANCERS, TERRAFORM_PUBLIC_IPS):
     """Populate Azure LB info."""
-    raw_attrs = DATA['primary']['attributes']
+    raw_attrs = RESOURCE['primary']['attributes']
     load_balancer = dict()
     public_ip_address = ''
     for pub_ip in TERRAFORM_PUBLIC_IPS:
