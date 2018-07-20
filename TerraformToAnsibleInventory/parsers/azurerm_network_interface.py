@@ -1,9 +1,9 @@
-def parse(DATA, TERRAFORM_NETWORK_INTERFACES):
+def parse(RESOURCE, TERRAFORM_NETWORK_INTERFACES):
     """Populate Azure network interface info."""
     interface = dict()
     private_ips = []
     public_ips = []
-    raw_attrs = DATA['primary']['attributes']
+    raw_attrs = RESOURCE['primary']['attributes']
     num_ips = int(raw_attrs['ip_configuration.#'])
     for count in xrange(num_ips):
         private_ips.append(

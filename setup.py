@@ -4,7 +4,7 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setup(name='TerraformToAnsibleInventory',
-      version='0.1.0',
+      version='0.2.0',
       description='Generates Ansible inventory in YAML format by parsing the tfstate.',
       url='https://github.com/mrlesmithjr/python-terraform-to-ansible-inventory',
       author='Larry Smith Jr.',
