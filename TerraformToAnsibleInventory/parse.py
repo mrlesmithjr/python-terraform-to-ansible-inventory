@@ -45,6 +45,24 @@ def parse_data(DATA, TERRAFORM_VMS, TERRAFORM_NETWORK_INTERFACES,
     print "Processing %s different module elements." % len(DATA_MODULES)
     for ELEMENT in range(len(DATA_MODULES)):
         RESOURCES = DATA_MODULES[ELEMENT]['resources']
+
+        # We first need to iterate over resources to collect all Public IP's
+        # This ensures that all public IP information is collected prior to
+        # iterating over LB's for correlation
+        for NAME, RESOURCE in RESOURCES.items():
+            if RESOURCE['type'] == 'azurerm_public_ip':
+                ParseAzurePublicIp(RESOURCE, TERRAFORM_PUBLIC_IPS)
+
+        # We next need to iterate over resources to collect all LB information
+        # This ensures that all LB information is collected prior to
+        # iterating over additional resources, and also ensure correlation
+        # between Public IPs and LB's
+        for NAME, RESOURCE in RESOURCES.items():
+            if RESOURCE['type'] == 'azurerm_lb':
+                ParseAzureLb(RESOURCE, TERRAFORM_LOAD_BALANCERS,
+                             TERRAFORM_PUBLIC_IPS)
+
+        # Now we can iterate over the remaining resources
         for NAME, RESOURCE in RESOURCES.items():
             if RESOURCE['type'] == 'aws_instance':
                 ParseAwsInstance(RESOURCE, NAME, TERRAFORM_VMS)
@@ -52,13 +70,6 @@ def parse_data(DATA, TERRAFORM_VMS, TERRAFORM_NETWORK_INTERFACES,
             elif RESOURCE['type'] == 'azurerm_network_interface':
                 ParseAzureNetworkInterface(
                     RESOURCE, TERRAFORM_NETWORK_INTERFACES)
-
-            elif RESOURCE['type'] == 'azurerm_public_ip':
-                ParseAzurePublicIp(RESOURCE, TERRAFORM_PUBLIC_IPS)
-
-            elif RESOURCE['type'] == 'azurerm_lb':
-                ParseAzureLb(RESOURCE, TERRAFORM_LOAD_BALANCERS,
-                             TERRAFORM_PUBLIC_IPS)
 
             elif RESOURCE['type'] == 'azurerm_virtual_machine':
                 ParseAzureVm(
