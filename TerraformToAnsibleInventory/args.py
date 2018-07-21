@@ -1,4 +1,5 @@
 import argparse
+from _version import __version__
 
 
 def parse():
@@ -20,6 +21,8 @@ def parse():
                         default='./terraform_inventory.yml')
     PARSER.add_argument('-t', '--tfstate', help='Terraform tftstate file',
                         default='./terraform.tfstate')
+    PARSER.add_argument('-v', '--version', action='version',
+                        version='%(prog)s {version}'.format(version=__version__))
     ARGS = PARSER.parse_args()
     if ARGS.backend == 'consul' and ARGS.consulHost is None:
         PARSER.error('Consul host is required when using Consul backend.')
