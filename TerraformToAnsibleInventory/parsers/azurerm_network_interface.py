@@ -15,4 +15,13 @@ def parse(RESOURCE, TERRAFORM_NETWORK_INTERFACES):
                       'private_ip_address': raw_attrs['private_ip_address'],
                       'private_ips': private_ips,
                       'public_ips': public_ips})
+
+    try:
+        raw_attrs['network_security_group_id']
+        interface.update(
+            {'network_security_group_id':
+             raw_attrs['network_security_group_id']})
+    except KeyError:
+        pass
+
     TERRAFORM_NETWORK_INTERFACES.append(interface)

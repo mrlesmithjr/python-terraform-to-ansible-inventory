@@ -2,7 +2,8 @@
 
 def terraform(TERRAFORM_DATA_TYPES, TERRAFORM_INVENTORY,
               TERRAFORM_NETWORK_INTERFACES,
-              TERRAFORM_PUBLIC_IPS, TERRAFORM_VMS):
+              TERRAFORM_PUBLIC_IPS, TERRAFORM_VMS,
+              TERRAFORM_NETWORK_SECURITY_GROUPS):
     """Build Terraform inventory structure."""
     for vm in TERRAFORM_VMS:
         pub_ips = []
@@ -25,13 +26,27 @@ def terraform(TERRAFORM_DATA_TYPES, TERRAFORM_INVENTORY,
                              'data_type': vm['data_type'],
                              'ansible_host': interface['private_ip_address'],
                              'location': vm['location'],
+                             'mac_address': interface['mac_address'],
                              'private_ips': interface['private_ips'],
                              'public_ips': pub_ips,
                              'resource_group_name': vm['resource_group_name'],
                              'target': vm['target'],
                              'vm_size': vm['vm_size'],
                              'ansible_groups': vm['ansible_groups']})
-                        TERRAFORM_INVENTORY.append(_vm)
+
+                    for security_group in TERRAFORM_NETWORK_SECURITY_GROUPS:
+                        try:
+                            interface['network_security_group_id']
+                            if (interface['network_security_group_id'] ==
+                                    security_group['id']):
+                                _vm.update(
+                                    {'security_group': security_group['name'],
+                                     'security_group_rules':
+                                     security_group['security_group_rules']})
+                        except KeyError:
+                            pass
+
+                    TERRAFORM_INVENTORY.append(_vm)
 
         elif vm['data_type'] == 'vsphere_virtual_machine':
             TERRAFORM_INVENTORY.append(vm)

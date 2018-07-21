@@ -2,6 +2,7 @@ from . backends.local_backend import load as TerraformLocalBackend
 from . backends.consul_backend import load as TerraformConsulBackend
 from . parsers.aws_instance import parse as ParseAwsInstance
 from . parsers.azurerm_network_interface import parse as ParseAzureNetworkInterface
+from . parsers.azurerm_network_security_group import parse as ParseAzureNetworkSecurityGroup
 from . parsers.azurerm_public_ip import parse as ParseAzurePublicIp
 from . parsers.azurerm_lb import parse as ParseAzureLb
 from . parsers.azurerm_virtual_machine import parse as ParseAzureVm
@@ -13,7 +14,7 @@ def terraform_tfstate(ARGS, TERRAFORM_ANSIBLE_GROUPS,
                       TERRAFORM_LOAD_BALANCERS,
                       TERRAFORM_PUBLIC_IPS,
                       TERRAFORM_TFSTATE,
-                      TERRAFORM_VMS):
+                      TERRAFORM_VMS, TERRAFORM_NETWORK_SECURITY_GROUPS):
     """Parse terraform.tfstate."""
 
     if ARGS.backend == 'local':
@@ -23,12 +24,12 @@ def terraform_tfstate(ARGS, TERRAFORM_ANSIBLE_GROUPS,
 
     parse_data(DATA, TERRAFORM_VMS, TERRAFORM_NETWORK_INTERFACES,
                TERRAFORM_PUBLIC_IPS, TERRAFORM_LOAD_BALANCERS,
-               TERRAFORM_ANSIBLE_GROUPS)
+               TERRAFORM_ANSIBLE_GROUPS, TERRAFORM_NETWORK_SECURITY_GROUPS)
 
 
 def parse_data(DATA, TERRAFORM_VMS, TERRAFORM_NETWORK_INTERFACES,
                TERRAFORM_PUBLIC_IPS, TERRAFORM_LOAD_BALANCERS,
-               TERRAFORM_ANSIBLE_GROUPS):
+               TERRAFORM_ANSIBLE_GROUPS, TERRAFORM_NETWORK_SECURITY_GROUPS):
     """Now we parse all of the data collected from our backends."""
     DATA_MODULES = DATA['modules']
     print "Processing %s different module elements." % len(DATA_MODULES)
@@ -50,6 +51,12 @@ def parse_data(DATA, TERRAFORM_VMS, TERRAFORM_NETWORK_INTERFACES,
             if RESOURCE['type'] == 'azurerm_lb':
                 ParseAzureLb(RESOURCE, TERRAFORM_LOAD_BALANCERS,
                              TERRAFORM_PUBLIC_IPS)
+
+        # We next iterate over any security groups to collect info
+        for NAME, RESOURCE in RESOURCES.items():
+            if RESOURCE['type'] == 'azurerm_network_security_group':
+                ParseAzureNetworkSecurityGroup(
+                    RESOURCE, TERRAFORM_NETWORK_SECURITY_GROUPS)
 
         # Now we can iterate over the remaining resources
         for NAME, RESOURCE in RESOURCES.items():
