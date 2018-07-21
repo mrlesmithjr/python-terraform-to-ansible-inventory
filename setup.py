@@ -1,12 +1,21 @@
 from setuptools import setup
 from setuptools import find_packages
-from TerraformToAnsibleInventory._version import __version__
+import re
+
+VERSIONFILE = "TerraformToAnsibleInventory/_version.py"
+verstrline = open(VERSIONFILE, "rt").read()
+VSRE = r"^__version__ = ['\"]([^'\"]*)['\"]"
+mo = re.search(VSRE, verstrline, re.M)
+if mo:
+    verstr = mo.group(1)
+else:
+    raise RuntimeError("Unable to find version string in %s." % (VERSIONFILE,))
 
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setup(name='TerraformToAnsibleInventory',
-      version=__version__,
+      version=verstr,
       description='Consumes Terraform State and generates Ansible inventory.',
       url='https://github.com/mrlesmithjr/python-terraform-to-ansible-inventory',
       author='Larry Smith Jr.',
