@@ -3,7 +3,7 @@ import json
 # import sys
 
 
-def backend(ARGS):
+def load(ARGS):
     """Collect Consul backend data."""
     CONSUL_HOST = ARGS.consulHost
     CONSUL_KV_PAIR = ARGS.consulKV

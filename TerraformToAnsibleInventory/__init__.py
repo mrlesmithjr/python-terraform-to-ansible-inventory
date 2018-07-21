@@ -1,11 +1,9 @@
 import os
-from TerraformToAnsibleInventory.args import parse as ArgsParse
-from TerraformToAnsibleInventory.parse import (terraform_tfstate
-                                               as ParseTerraformTfstate)
-from TerraformToAnsibleInventory.build_inventory import (terraform
-                                                         as BuildTerraformInventory)
-from TerraformToAnsibleInventory.generate_inventory import (ansible
-                                                            as GenerateAnsibleInventory)
+from . args import parse as ArgsParse
+from . parse import terraform_tfstate as ParseTerraformTfstate
+from . build_inventory import terraform as BuildTerraformInventory
+from . generate_inventory import ansible as GenerateAnsibleInventory
+
 ARGS = ArgsParse()
 
 CWD = os.getcwd()
