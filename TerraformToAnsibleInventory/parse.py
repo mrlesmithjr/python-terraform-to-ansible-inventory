@@ -1,22 +1,11 @@
-from TerraformToAnsibleInventory.backends.local_backend import (backend as
-                                                                TerraformLocalBackend
-                                                                )
-from TerraformToAnsibleInventory.backends.consul_backend import (backend as
-                                                                 TerraformConsulBackend
-                                                                 )
-
-from TerraformToAnsibleInventory.parsers.aws_instance import (
-    parse as ParseAwsInstance)
-from TerraformToAnsibleInventory.parsers.azurerm_network_interface import (
-    parse as ParseAzureNetworkInterface)
-from TerraformToAnsibleInventory.parsers.azurerm_public_ip import (
-    parse as ParseAzurePublicIp)
-from TerraformToAnsibleInventory.parsers.azurerm_lb import (
-    parse as ParseAzureLb)
-from TerraformToAnsibleInventory.parsers.azurerm_virtual_machine import (
-    parse as ParseAzureVm)
-from TerraformToAnsibleInventory.parsers.vsphere_virtual_machine import (
-    parse as ParsevSphereVm)
+from . backends.local_backend import load as TerraformLocalBackend
+from . backends.consul_backend import load as TerraformConsulBackend
+from . parsers.aws_instance import parse as ParseAwsInstance
+from . parsers.azurerm_network_interface import parse as ParseAzureNetworkInterface
+from . parsers.azurerm_public_ip import parse as ParseAzurePublicIp
+from . parsers.azurerm_lb import parse as ParseAzureLb
+from . parsers.azurerm_virtual_machine import parse as ParseAzureVm
+from . parsers.vsphere_virtual_machine import parse as ParsevSphereVm
 
 
 def terraform_tfstate(ARGS, TERRAFORM_ANSIBLE_GROUPS,
