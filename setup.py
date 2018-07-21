@@ -1,11 +1,12 @@
 from setuptools import setup
 from setuptools import find_packages
+from TerraformToAnsibleInventory._version import __version__
 
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setup(name='TerraformToAnsibleInventory',
-      version='0.3.0',
+      version=__version__,
       description='Consumes Terraform State and generates Ansible inventory.',
       url='https://github.com/mrlesmithjr/python-terraform-to-ansible-inventory',
       author='Larry Smith Jr.',
