@@ -1,8 +1,13 @@
-def parse(RESOURCE, TERRAFORM_VMS):
+from .. logging_config import setup as LoggingConfigSetup
+
+
+def parse(LOG_LEVEL, RESOURCE, TERRAFORM_VMS):
     """Populate vSphere VM info."""
+    LOGGER = LoggingConfigSetup(LOG_LEVEL)
     vm = dict()
     ansible_groups = []
     raw_attrs = RESOURCE['primary']['attributes']
+    LOGGER.debug(raw_attrs)
     vm.update(
         {'ansible_host': raw_attrs['network_interface.0.ipv4_address'],
          'data_type': RESOURCE['type'], 'id': raw_attrs['id'],

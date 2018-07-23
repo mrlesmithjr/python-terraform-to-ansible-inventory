@@ -1,10 +1,12 @@
+from . logging_config import setup as LoggingConfigSetup
 
 
-def terraform(TERRAFORM_DATA_TYPES, TERRAFORM_INVENTORY,
+def terraform(LOG_LEVEL, TERRAFORM_DATA_TYPES, TERRAFORM_INVENTORY,
               TERRAFORM_NETWORK_INTERFACES,
               TERRAFORM_PUBLIC_IPS, TERRAFORM_VMS,
               TERRAFORM_NETWORK_SECURITY_GROUPS):
     """Build Terraform inventory structure."""
+    LOGGER = LoggingConfigSetup(LOG_LEVEL)
     for vm in TERRAFORM_VMS:
         pub_ips = []
         _vm = dict()
@@ -15,8 +17,11 @@ def terraform(TERRAFORM_DATA_TYPES, TERRAFORM_INVENTORY,
             TERRAFORM_INVENTORY.append(vm)
 
         if vm['data_type'] == 'azurerm_virtual_machine':
+            LOGGER.info('Adding %s: %s to inventory.' %
+                        (vm['data_type'], vm['inventory_hostname']))
             for interface in TERRAFORM_NETWORK_INTERFACES:
                 if interface['virtual_machine_id'] == vm['id']:
+                    LOGGER.debug(interface)
                     for pub_ip in TERRAFORM_PUBLIC_IPS:
                         if pub_ip['id'] in interface['public_ips']:
                             if pub_ip['ip_address'] not in pub_ips:
@@ -44,8 +49,9 @@ def terraform(TERRAFORM_DATA_TYPES, TERRAFORM_INVENTORY,
                                      'security_group_rules':
                                      security_group['security_group_rules']})
                         except KeyError:
+                            LOGGER.debug(KeyError)
                             pass
-
+                    LOGGER.debug(_vm)
                     TERRAFORM_INVENTORY.append(_vm)
 
         elif vm['data_type'] == 'vsphere_virtual_machine':

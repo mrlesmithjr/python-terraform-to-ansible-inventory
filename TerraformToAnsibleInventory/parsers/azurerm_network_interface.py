@@ -1,9 +1,14 @@
-def parse(RESOURCE, TERRAFORM_NETWORK_INTERFACES):
+from .. logging_config import setup as LoggingConfigSetup
+
+
+def parse(LOG_LEVEL, RESOURCE, TERRAFORM_NETWORK_INTERFACES):
     """Populate Azure network interface info."""
+    LOGGER = LoggingConfigSetup(LOG_LEVEL)
     interface = dict()
     private_ips = []
     public_ips = []
     raw_attrs = RESOURCE['primary']['attributes']
+    LOGGER.debug(raw_attrs)
     num_ips = int(raw_attrs['ip_configuration.#'])
     for count in xrange(num_ips):
         private_ips.append(
@@ -22,6 +27,7 @@ def parse(RESOURCE, TERRAFORM_NETWORK_INTERFACES):
             {'network_security_group_id':
              raw_attrs['network_security_group_id']})
     except KeyError:
+        LOGGER.debug(KeyError)
         pass
 
     TERRAFORM_NETWORK_INTERFACES.append(interface)

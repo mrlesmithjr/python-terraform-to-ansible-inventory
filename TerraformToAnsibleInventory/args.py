@@ -19,6 +19,9 @@ def parse():
                         choices=['http', 'https'], default='http')
     PARSER.add_argument('-i', '--inventory', help='Ansible inventory',
                         default='./terraform_inventory.yml')
+    PARSER.add_argument('--logLevel', help='Define logging level output',
+                        choices=['CRITICAL', 'ERROR', 'WARNING',
+                                 'INFO', 'DEBUG'], default='INFO')
     PARSER.add_argument('-t', '--tfstate', help='Terraform tftstate file',
                         default='./terraform.tfstate')
     PARSER.add_argument('-v', '--version', action='version',

@@ -1,10 +1,13 @@
 import json
 import yaml
+from .. logging_config import setup as LoggingConfigSetup
 
 
-def parse(RESOURCE, TERRAFORM_NETWORK_SECURITY_GROUPS):
+def parse(LOG_LEVEL, RESOURCE, TERRAFORM_NETWORK_SECURITY_GROUPS):
     """Populate Azure network security group info."""
+    LOGGER = LoggingConfigSetup(LOG_LEVEL)
     raw_attrs = RESOURCE['primary']['attributes']
+    LOGGER.debug(raw_attrs)
     SECURITY_RULE_IDS = dict()
 
     for KEY, VALUE in raw_attrs.items():
