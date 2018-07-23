@@ -1,10 +1,13 @@
 import ast
+from .. logging_config import setup as LoggingConfigSetup
 
 
-def parse(RESOURCE, TERRAFORM_ANSIBLE_GROUPS, TERRAFORM_VMS):
+def parse(LOG_LEVEL, RESOURCE, TERRAFORM_ANSIBLE_GROUPS, TERRAFORM_VMS):
     """Populate Azure VM info."""
+    LOGGER = LoggingConfigSetup(LOG_LEVEL)
     vm = dict()
     raw_attrs = RESOURCE['primary']['attributes']
+    LOGGER.debug(raw_attrs)
     try:
         ansible_groups = []
         groups = ast.literal_eval(raw_attrs['tags.ansible_groups'])
@@ -13,6 +16,7 @@ def parse(RESOURCE, TERRAFORM_ANSIBLE_GROUPS, TERRAFORM_VMS):
             if group not in TERRAFORM_ANSIBLE_GROUPS:
                 TERRAFORM_ANSIBLE_GROUPS.append(group)
     except KeyError:
+        LOGGER.debug(KeyError)
         ansible_groups = []
 
     vm.update(

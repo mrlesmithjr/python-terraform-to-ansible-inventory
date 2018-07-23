@@ -1,12 +1,14 @@
 import yaml
 import json
+from . logging_config import setup as LoggingConfigSetup
 
 
-def ansible(TERRAFORM_ANSIBLE_GROUPS,
+def ansible(LOG_LEVEL, TERRAFORM_ANSIBLE_GROUPS,
             TERRAFORM_ANSIBLE_INVENTORY,
             TERRAFORM_DATA_TYPES, TERRAFORM_INVENTORY,
             TERRAFORM_LOAD_BALANCERS):
     """Generate Terraform inventory for Ansible and write to inventory file."""
+    LOGGER = LoggingConfigSetup(LOG_LEVEL)
     # Reset TERRAFORM_VMS for new collection
     TERRAFORM_VMS = dict()
 
@@ -44,4 +46,5 @@ def ansible(TERRAFORM_ANSIBLE_GROUPS,
     TERRAFORM_VMS = yaml.load(json.dumps(TERRAFORM_VMS))
 
     with open(TERRAFORM_ANSIBLE_INVENTORY, 'w') as yaml_file:
+        LOGGER.info('Inventory saved to: %s' % TERRAFORM_ANSIBLE_INVENTORY)
         yaml.dump(TERRAFORM_VMS, yaml_file, default_flow_style=False)

@@ -1,6 +1,11 @@
-def parse(RESOURCE, TERRAFORM_LOAD_BALANCERS, TERRAFORM_PUBLIC_IPS):
+from .. logging_config import setup as LoggingConfigSetup
+
+
+def parse(LOG_LEVEL, RESOURCE, TERRAFORM_LOAD_BALANCERS, TERRAFORM_PUBLIC_IPS):
     """Populate Azure LB info."""
+    LOGGER = LoggingConfigSetup(LOG_LEVEL)
     raw_attrs = RESOURCE['primary']['attributes']
+    LOGGER.debug(raw_attrs)
     load_balancer = dict()
     public_ip_address = ''
     for pub_ip in TERRAFORM_PUBLIC_IPS:
