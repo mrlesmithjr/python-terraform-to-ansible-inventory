@@ -1,6 +1,7 @@
 from . backends.local_backend import load as TerraformLocalBackend
 from . backends.consul_backend import load as TerraformConsulBackend
 from . parsers.aws_instance import parse as ParseAwsInstance
+from . parsers.aws_elb import parse as ParseAwsElb
 from . parsers.azurerm_network_interface import parse as ParseAzureNetworkInterface
 from . parsers.azurerm_network_security_group import parse as ParseAzureNetworkSecurityGroup
 from . parsers.azurerm_public_ip import parse as ParseAzurePublicIp
@@ -65,6 +66,11 @@ def parse_data(LOG_LEVEL, DATA, TERRAFORM_VMS, TERRAFORM_NETWORK_INTERFACES,
                 LOGGER.info('Processing resource type: %s' % RESOURCE['type'])
                 ParseAzureLb(LOG_LEVEL, RESOURCE, TERRAFORM_LOAD_BALANCERS,
                              TERRAFORM_PUBLIC_IPS)
+        for NAME, RESOURCE in RESOURCES.items():
+            if RESOURCE['type'] == 'aws_elb':
+                LOGGER.info('Processing resource type: %s' % RESOURCE['type'])
+                ParseAwsElb(LOG_LEVEL, RESOURCE, TERRAFORM_LOAD_BALANCERS,
+                            TERRAFORM_PUBLIC_IPS)
 
         # We next iterate over any security groups to collect info
         for NAME, RESOURCE in RESOURCES.items():

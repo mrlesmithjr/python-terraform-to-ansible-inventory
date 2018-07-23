@@ -2,6 +2,7 @@ include TerraformToAnsibleInventory/backends/__init__.py
 include TerraformToAnsibleInventory/backends/consul_backend.py
 include TerraformToAnsibleInventory/backends/local_backend.py
 include TerraformToAnsibleInventory/parsers/__init__.py
+include TerraformToAnsibleInventory/parsers/aws_elb.py
 include TerraformToAnsibleInventory/parsers/aws_instance.py
 include TerraformToAnsibleInventory/parsers/azurerm_lb.py
 include TerraformToAnsibleInventory/parsers/azurerm_network_interface.py
