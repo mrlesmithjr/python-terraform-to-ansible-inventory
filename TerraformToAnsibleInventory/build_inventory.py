@@ -7,54 +7,72 @@ def terraform(LOG_LEVEL, TERRAFORM_DATA_TYPES, TERRAFORM_INVENTORY,
               TERRAFORM_SECURITY_GROUPS):
     """Build Terraform inventory structure."""
     LOGGER = LoggingConfigSetup(LOG_LEVEL)
-    for vm in TERRAFORM_VMS:
-        pub_ips = []
-        _vm = dict()
-        if vm['data_type'] not in TERRAFORM_DATA_TYPES:
-            TERRAFORM_DATA_TYPES.append(vm['data_type'])
+    for VM in TERRAFORM_VMS:
+        if VM['data_type'] not in TERRAFORM_DATA_TYPES:
+            TERRAFORM_DATA_TYPES.append(VM['data_type'])
 
-        if vm['data_type'] == 'aws_instance':
-            TERRAFORM_INVENTORY.append(vm)
+        if VM['data_type'] == 'aws_instance':
+            VM_INFO = VM
 
-        if vm['data_type'] == 'azurerm_virtual_machine':
-            LOGGER.info('Adding %s: %s to inventory.' %
-                        (vm['data_type'], vm['inventory_hostname']))
-            for interface in TERRAFORM_NETWORK_INTERFACES:
-                if interface['virtual_machine_id'] == vm['id']:
-                    LOGGER.debug(interface)
-                    for pub_ip in TERRAFORM_PUBLIC_IPS:
-                        if pub_ip['id'] in interface['public_ips']:
-                            if pub_ip['ip_address'] not in pub_ips:
-                                pub_ips.append(pub_ip['ip_address'])
-                        _vm.update(
-                            {'inventory_hostname': vm['inventory_hostname'],
-                             'data_type': vm['data_type'],
-                             'ansible_host': interface['private_ip_address'],
-                             'location': vm['location'],
-                             'mac_address': interface['mac_address'],
-                             'private_ips': interface['private_ips'],
-                             'public_ips': pub_ips,
-                             'resource_group_name': vm['resource_group_name'],
-                             'target': vm['target'],
-                             'vm_size': vm['vm_size'],
-                             'ansible_groups': vm['ansible_groups']})
+        elif VM['data_type'] == 'azurerm_virtual_machine':
+            VM_INFO = azurerm_virtual_machine(
+                LOGGER, VM, TERRAFORM_NETWORK_INTERFACES, TERRAFORM_PUBLIC_IPS,
+                TERRAFORM_SECURITY_GROUPS, TERRAFORM_INVENTORY)
 
-                    for security_group in TERRAFORM_SECURITY_GROUPS:
-                        try:
-                            interface['network_security_group_id']
-                            if (interface['network_security_group_id'] ==
-                                    security_group['id']):
-                                _vm.update(
-                                    {
-                                        'security_groups':
-                                        security_group['security_groups'],
-                                    }
-                                )
-                        except KeyError:
-                            LOGGER.debug(KeyError)
-                            pass
-                    LOGGER.debug(_vm)
-                    TERRAFORM_INVENTORY.append(_vm)
+        elif VM['data_type'] == 'vsphere_virtual_machine':
+            VM_INFO = VM
 
-        elif vm['data_type'] == 'vsphere_virtual_machine':
-            TERRAFORM_INVENTORY.append(vm)
+        update_inventory(LOGGER, TERRAFORM_INVENTORY, VM_INFO)
+
+
+def azurerm_virtual_machine(LOGGER, VM, TERRAFORM_NETWORK_INTERFACES,
+                            TERRAFORM_PUBLIC_IPS, TERRAFORM_SECURITY_GROUPS,
+                            TERRAFORM_INVENTORY):
+    """Generates Azure VM info to add to inventory."""
+    LOGGER.info('Adding %s: %s to inventory.' %
+                (VM['data_type'], VM['inventory_hostname']))
+
+    for interface in TERRAFORM_NETWORK_INTERFACES:
+        if interface['virtual_machine_id'] == VM['id']:
+            PUB_IPS = []
+            VM_INFO = dict()
+            LOGGER.debug(interface)
+            for pub_ip in TERRAFORM_PUBLIC_IPS:
+                if (pub_ip['id'] in interface['public_ips'] and
+                        pub_ip['ip_address'] not in PUB_IPS):
+                    PUB_IPS.append(pub_ip['ip_address'])
+
+            VM_INFO.update(
+                {'inventory_hostname': VM['inventory_hostname'],
+                 'data_type': VM['data_type'],
+                 'ansible_host': interface['private_ip_address'],
+                 'location': VM['location'],
+                 'mac_address': interface['mac_address'],
+                 'private_ips': interface['private_ips'],
+                 'public_ips': PUB_IPS,
+                 'resource_group_name': VM['resource_group_name'],
+                 'target': VM['target'],
+                 'vm_size': VM['vm_size'],
+                 'ansible_groups': VM['ansible_groups']})
+
+            for security_group in TERRAFORM_SECURITY_GROUPS:
+                try:
+                    interface['network_security_group_id']
+                    if (interface['network_security_group_id'] ==
+                            security_group['id']):
+                        VM_INFO.update(
+                            {
+                                'security_groups':
+                                security_group['security_groups'],
+                            }
+                        )
+                except KeyError:
+                    LOGGER.debug(KeyError)
+                    pass
+
+            return VM_INFO
+
+
+def update_inventory(LOGGER, TERRAFORM_INVENTORY, VM_INFO):
+    LOGGER.debug(VM_INFO)
+    TERRAFORM_INVENTORY.append(VM_INFO)

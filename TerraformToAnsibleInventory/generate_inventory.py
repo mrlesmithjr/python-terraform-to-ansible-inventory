@@ -8,7 +8,6 @@ def ansible(LOG_LEVEL, TERRAFORM_ANSIBLE_GROUPS,
             TERRAFORM_DATA_TYPES, TERRAFORM_INVENTORY,
             TERRAFORM_LOAD_BALANCERS):
     """Generate Terraform inventory for Ansible and write to inventory file."""
-    LOGGER = LoggingConfigSetup(LOG_LEVEL)
     # Reset TERRAFORM_VMS for new collection
     TERRAFORM_VMS = dict()
 
@@ -43,6 +42,12 @@ def ansible(LOG_LEVEL, TERRAFORM_ANSIBLE_GROUPS,
                 TERRAFORM_VMS[lb['type']]['hosts'] = dict()
                 TERRAFORM_VMS[lb['type']]['hosts'][lb['name']] = dict()
 
+    generate(TERRAFORM_VMS, TERRAFORM_ANSIBLE_INVENTORY, LOG_LEVEL)
+
+
+def generate(TERRAFORM_VMS, TERRAFORM_ANSIBLE_INVENTORY, LOG_LEVEL):
+    """Finally generate a functional Ansible inventory file."""
+    LOGGER = LoggingConfigSetup(LOG_LEVEL)
     TERRAFORM_VMS = yaml.load(json.dumps(TERRAFORM_VMS))
 
     with open(TERRAFORM_ANSIBLE_INVENTORY, 'w') as yaml_file:
