@@ -4,7 +4,7 @@ from . logging_config import setup as LoggingConfigSetup
 def terraform(LOG_LEVEL, TERRAFORM_DATA_TYPES, TERRAFORM_INVENTORY,
               TERRAFORM_NETWORK_INTERFACES,
               TERRAFORM_PUBLIC_IPS, TERRAFORM_VMS,
-              TERRAFORM_NETWORK_SECURITY_GROUPS):
+              TERRAFORM_SECURITY_GROUPS):
     """Build Terraform inventory structure."""
     LOGGER = LoggingConfigSetup(LOG_LEVEL)
     for vm in TERRAFORM_VMS:
@@ -39,15 +39,17 @@ def terraform(LOG_LEVEL, TERRAFORM_DATA_TYPES, TERRAFORM_INVENTORY,
                              'vm_size': vm['vm_size'],
                              'ansible_groups': vm['ansible_groups']})
 
-                    for security_group in TERRAFORM_NETWORK_SECURITY_GROUPS:
+                    for security_group in TERRAFORM_SECURITY_GROUPS:
                         try:
                             interface['network_security_group_id']
                             if (interface['network_security_group_id'] ==
                                     security_group['id']):
                                 _vm.update(
-                                    {'security_group': security_group['name'],
-                                     'security_group_rules':
-                                     security_group['security_group_rules']})
+                                    {
+                                        'security_groups':
+                                        security_group['security_groups'],
+                                    }
+                                )
                         except KeyError:
                             LOGGER.debug(KeyError)
                             pass
