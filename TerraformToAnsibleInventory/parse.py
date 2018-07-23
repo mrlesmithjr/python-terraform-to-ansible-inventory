@@ -2,6 +2,7 @@ from . backends.local_backend import load as TerraformLocalBackend
 from . backends.consul_backend import load as TerraformConsulBackend
 from . parsers.aws_instance import parse as ParseAwsInstance
 from . parsers.aws_elb import parse as ParseAwsElb
+from . parsers.aws_security_group import parse as ParseAwsSecurityGroup
 from . parsers.azurerm_network_interface import parse as ParseAzureNetworkInterface
 from . parsers.azurerm_network_security_group import parse as ParseAzureNetworkSecurityGroup
 from . parsers.azurerm_public_ip import parse as ParseAzurePublicIp
@@ -18,18 +19,25 @@ def terraform_tfstate(ARGS, LOG_LEVEL, TERRAFORM_ANSIBLE_GROUPS,
                       TERRAFORM_TFSTATE,
                       TERRAFORM_VMS, TERRAFORM_SECURITY_GROUPS):
     """Parse terraform.tfstate."""
+    DATA = setup_backend(ARGS, LOG_LEVEL, TERRAFORM_TFSTATE)
+
+    parse_data(LOG_LEVEL, DATA, TERRAFORM_VMS, TERRAFORM_NETWORK_INTERFACES,
+               TERRAFORM_PUBLIC_IPS, TERRAFORM_LOAD_BALANCERS,
+               TERRAFORM_ANSIBLE_GROUPS, TERRAFORM_SECURITY_GROUPS)
+
+
+def setup_backend(ARGS, LOG_LEVEL, TERRAFORM_TFSTATE):
     LOGGER = LoggingConfigSetup(LOG_LEVEL)
 
     if ARGS.backend == 'local':
         LOGGER.info('Parsing Terraform backend: %s' % ARGS.backend)
         DATA = TerraformLocalBackend(LOG_LEVEL, TERRAFORM_TFSTATE)
+
     elif ARGS.backend == 'consul':
         LOGGER.info('Parsing Terraform backend: %s' % ARGS.backend)
         DATA = TerraformConsulBackend(ARGS, LOG_LEVEL)
 
-    parse_data(LOG_LEVEL, DATA, TERRAFORM_VMS, TERRAFORM_NETWORK_INTERFACES,
-               TERRAFORM_PUBLIC_IPS, TERRAFORM_LOAD_BALANCERS,
-               TERRAFORM_ANSIBLE_GROUPS, TERRAFORM_SECURITY_GROUPS)
+    return DATA
 
 
 def parse_data(LOG_LEVEL, DATA, TERRAFORM_VMS, TERRAFORM_NETWORK_INTERFACES,
@@ -52,50 +60,76 @@ def parse_data(LOG_LEVEL, DATA, TERRAFORM_VMS, TERRAFORM_NETWORK_INTERFACES,
         # We first need to iterate over resources to collect all Public IP's
         # This ensures that all public IP information is collected prior to
         # iterating over LB's for correlation
-        for NAME, RESOURCE in RESOURCES.items():
-            if RESOURCE['type'] == 'azurerm_public_ip':
-                LOGGER.info('Processing resource type: %s' % RESOURCE['type'])
-                ParseAzurePublicIp(LOG_LEVEL, RESOURCE, TERRAFORM_PUBLIC_IPS)
+        public_ips(RESOURCES, LOGGER, LOG_LEVEL, TERRAFORM_PUBLIC_IPS)
 
         # We next need to iterate over resources to collect all LB information
         # This ensures that all LB information is collected prior to
         # iterating over additional resources, and also ensure correlation
         # between Public IPs and LB's
-        for NAME, RESOURCE in RESOURCES.items():
-            if RESOURCE['type'] == 'azurerm_lb':
-                LOGGER.info('Processing resource type: %s' % RESOURCE['type'])
-                ParseAzureLb(LOG_LEVEL, RESOURCE, TERRAFORM_LOAD_BALANCERS,
-                             TERRAFORM_PUBLIC_IPS)
-        for NAME, RESOURCE in RESOURCES.items():
-            if RESOURCE['type'] == 'aws_elb':
-                LOGGER.info('Processing resource type: %s' % RESOURCE['type'])
-                ParseAwsElb(LOG_LEVEL, RESOURCE, TERRAFORM_LOAD_BALANCERS,
-                            TERRAFORM_PUBLIC_IPS)
+        load_balancers(RESOURCES, LOGGER, LOG_LEVEL,
+                       TERRAFORM_LOAD_BALANCERS, TERRAFORM_PUBLIC_IPS)
 
         # We next iterate over any security groups to collect info
-        for NAME, RESOURCE in RESOURCES.items():
-            if RESOURCE['type'] == 'azurerm_network_security_group':
-                LOGGER.info('Processing resource type: %s' % RESOURCE['type'])
-                ParseAzureNetworkSecurityGroup(
-                    LOG_LEVEL, RESOURCE, TERRAFORM_NETWORK_SECURITY_GROUPS)
+        security_groups(RESOURCES, LOGGER, LOG_LEVEL,
+                        TERRAFORM_SECURITY_GROUPS)
 
         # Now we can iterate over the remaining resources
-        for NAME, RESOURCE in RESOURCES.items():
-            if RESOURCE['type'] == 'aws_instance':
-                LOGGER.info('Processing resource type: %s' % RESOURCE['type'])
-                ParseAwsInstance(LOG_LEVEL, RESOURCE, NAME, TERRAFORM_VMS)
+        remaining_resources(RESOURCES, LOGGER, LOG_LEVEL,
+                            TERRAFORM_VMS, TERRAFORM_NETWORK_INTERFACES,
+                            TERRAFORM_ANSIBLE_GROUPS)
 
-            elif RESOURCE['type'] == 'azurerm_network_interface':
-                LOGGER.info('Processing resource type: %s' % RESOURCE['type'])
-                ParseAzureNetworkInterface(
-                    LOG_LEVEL, RESOURCE, TERRAFORM_NETWORK_INTERFACES)
 
-            elif RESOURCE['type'] == 'azurerm_virtual_machine':
-                LOGGER.info('Processing resource type: %s' % RESOURCE['type'])
-                ParseAzureVm(
-                    LOG_LEVEL, RESOURCE, TERRAFORM_ANSIBLE_GROUPS,
-                    TERRAFORM_VMS)
+def public_ips(RESOURCES, LOGGER, LOG_LEVEL, TERRAFORM_PUBLIC_IPS):
+    for NAME, RESOURCE in RESOURCES.items():
+        if RESOURCE['type'] == 'azurerm_public_ip':
+            LOGGER.info('Processing resource type: %s' % RESOURCE['type'])
+            ParseAzurePublicIp(LOG_LEVEL, RESOURCE, TERRAFORM_PUBLIC_IPS)
 
-            elif RESOURCE['type'] == 'vsphere_virtual_machine':
-                LOGGER.info('Processing resource type: %s' % RESOURCE['type'])
-                ParsevSphereVm(LOG_LEVEL, RESOURCE, TERRAFORM_VMS)
+
+def load_balancers(RESOURCES, LOGGER, LOG_LEVEL, TERRAFORM_LOAD_BALANCERS,
+                   TERRAFORM_PUBLIC_IPS):
+    for NAME, RESOURCE in RESOURCES.items():
+        if RESOURCE['type'] == 'azurerm_lb':
+            LOGGER.info('Processing resource type: %s' % RESOURCE['type'])
+            ParseAzureLb(LOG_LEVEL, RESOURCE, TERRAFORM_LOAD_BALANCERS,
+                         TERRAFORM_PUBLIC_IPS)
+        elif RESOURCE['type'] == 'aws_elb':
+            LOGGER.info('Processing resource type: %s' % RESOURCE['type'])
+            ParseAwsElb(LOG_LEVEL, RESOURCE, TERRAFORM_LOAD_BALANCERS,
+                        TERRAFORM_PUBLIC_IPS)
+
+
+def security_groups(RESOURCES, LOGGER, LOG_LEVEL, TERRAFORM_SECURITY_GROUPS):
+    for NAME, RESOURCE in RESOURCES.items():
+        if RESOURCE['type'] == 'azurerm_network_security_group':
+            LOGGER.info('Processing resource type: %s' % RESOURCE['type'])
+            ParseAzureNetworkSecurityGroup(
+                LOG_LEVEL, RESOURCE, TERRAFORM_SECURITY_GROUPS)
+        elif RESOURCE['type'] == 'aws_security_group':
+            LOGGER.info('Processing resource type: %s' % RESOURCE['type'])
+            ParseAwsSecurityGroup(
+                LOG_LEVEL, RESOURCE, TERRAFORM_SECURITY_GROUPS)
+
+
+def remaining_resources(RESOURCES, LOGGER, LOG_LEVEL, TERRAFORM_VMS,
+                        TERRAFORM_NETWORK_INTERFACES,
+                        TERRAFORM_ANSIBLE_GROUPS):
+    for NAME, RESOURCE in RESOURCES.items():
+        if RESOURCE['type'] == 'aws_instance':
+            LOGGER.info('Processing resource type: %s' % RESOURCE['type'])
+            ParseAwsInstance(LOG_LEVEL, RESOURCE, NAME, TERRAFORM_VMS)
+
+        elif RESOURCE['type'] == 'azurerm_network_interface':
+            LOGGER.info('Processing resource type: %s' % RESOURCE['type'])
+            ParseAzureNetworkInterface(
+                LOG_LEVEL, RESOURCE, TERRAFORM_NETWORK_INTERFACES)
+
+        elif RESOURCE['type'] == 'azurerm_virtual_machine':
+            LOGGER.info('Processing resource type: %s' % RESOURCE['type'])
+            ParseAzureVm(
+                LOG_LEVEL, RESOURCE, TERRAFORM_ANSIBLE_GROUPS,
+                TERRAFORM_VMS)
+
+        elif RESOURCE['type'] == 'vsphere_virtual_machine':
+            LOGGER.info('Processing resource type: %s' % RESOURCE['type'])
+            ParsevSphereVm(LOG_LEVEL, RESOURCE, TERRAFORM_VMS)
