@@ -127,7 +127,7 @@ def remaining_resources(RESOURCES, LOGGER, LOG_LEVEL, TERRAFORM_VMS,
         elif RESOURCE['type'] == 'azurerm_virtual_machine':
             LOGGER.info('Processing resource type: %s' % RESOURCE['type'])
             ParseAzureVm(
-                LOG_LEVEL, RESOURCE, TERRAFORM_ANSIBLE_GROUPS,
+                LOG_LEVEL, NAME, RESOURCE, TERRAFORM_ANSIBLE_GROUPS,
                 TERRAFORM_VMS)
 
         elif RESOURCE['type'] == 'vsphere_virtual_machine':

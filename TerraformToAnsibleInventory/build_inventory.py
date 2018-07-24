@@ -12,7 +12,7 @@ def terraform(LOG_LEVEL, TERRAFORM_DATA_TYPES, TERRAFORM_INVENTORY,
             TERRAFORM_DATA_TYPES.append(VM['data_type'])
 
         if VM['data_type'] == 'aws_instance':
-            VM_INFO = VM
+            VM_INFO = aws_instance(LOGGER, VM, TERRAFORM_SECURITY_GROUPS)
 
         elif VM['data_type'] == 'azurerm_virtual_machine':
             VM_INFO = azurerm_virtual_machine(
@@ -23,6 +23,45 @@ def terraform(LOG_LEVEL, TERRAFORM_DATA_TYPES, TERRAFORM_INVENTORY,
             VM_INFO = VM
 
         update_inventory(LOGGER, TERRAFORM_INVENTORY, VM_INFO)
+
+
+def aws_instance(LOGGER, VM, TERRAFORM_SECURITY_GROUPS):
+    """Generates Azure VM info to add to inventory."""
+    VM_INFO = dict()
+    LOGGER.info('Adding %s: %s to inventory.' %
+                (VM['data_type'], VM['inventory_hostname']))
+
+    VM_INFO.update(
+        {
+            'inventory_hostname': VM['inventory_hostname'],
+            'ami': VM['ami'],
+            'data_type': VM['data_type'],
+            'ansible_groups': VM['ansible_groups'],
+            'availability_zone': VM['availability_zone'],
+            'instance_type': VM['instance_type'],
+            'key_name': VM['key_name'],
+            'network_interface_id': VM['network_interface_id'],
+            'private_dns': VM['private_dns'],
+            'private_ip': VM['private_ip'],
+            'public_dns': VM['public_dns'],
+            'public_ip': VM['public_ip'],
+            'subnet_id': VM['subnet_id'],
+            'target': VM['target'],
+            'vpc_security_group_ids': VM['vpc_security_group_ids']
+        }
+    )
+
+    for VPC_SECURITY_GROUP_ID in VM['vpc_security_group_ids']:
+        for SECURITY_GROUP in TERRAFORM_SECURITY_GROUPS:
+            if SECURITY_GROUP['id'] == VPC_SECURITY_GROUP_ID:
+                VM_INFO.update(
+                    {
+                        'vpc_security_groups':
+                        SECURITY_GROUP['security_groups']
+                    }
+                )
+
+    return VM_INFO
 
 
 def azurerm_virtual_machine(LOGGER, VM, TERRAFORM_NETWORK_INTERFACES,
