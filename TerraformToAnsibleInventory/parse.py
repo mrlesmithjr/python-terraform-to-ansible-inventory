@@ -80,6 +80,7 @@ def parse_data(LOG_LEVEL, DATA, TERRAFORM_VMS, TERRAFORM_NETWORK_INTERFACES,
 
 
 def public_ips(RESOURCES, LOGGER, LOG_LEVEL, TERRAFORM_PUBLIC_IPS):
+    """Captures Azure public IPs."""
     for NAME, RESOURCE in RESOURCES.items():
         if RESOURCE['type'] == 'azurerm_public_ip':
             LOGGER.info('Processing resource type: %s' % RESOURCE['type'])
@@ -88,11 +89,13 @@ def public_ips(RESOURCES, LOGGER, LOG_LEVEL, TERRAFORM_PUBLIC_IPS):
 
 def load_balancers(RESOURCES, LOGGER, LOG_LEVEL, TERRAFORM_LOAD_BALANCERS,
                    TERRAFORM_PUBLIC_IPS):
+    """Captures LB configurations."""
     for NAME, RESOURCE in RESOURCES.items():
         if RESOURCE['type'] == 'azurerm_lb':
             LOGGER.info('Processing resource type: %s' % RESOURCE['type'])
             ParseAzureLb(LOG_LEVEL, RESOURCE, TERRAFORM_LOAD_BALANCERS,
                          TERRAFORM_PUBLIC_IPS)
+
         elif RESOURCE['type'] == 'aws_elb':
             LOGGER.info('Processing resource type: %s' % RESOURCE['type'])
             ParseAwsElb(LOG_LEVEL, RESOURCE, TERRAFORM_LOAD_BALANCERS,
@@ -100,11 +103,13 @@ def load_balancers(RESOURCES, LOGGER, LOG_LEVEL, TERRAFORM_LOAD_BALANCERS,
 
 
 def security_groups(RESOURCES, LOGGER, LOG_LEVEL, TERRAFORM_SECURITY_GROUPS):
+    """Captures security groups."""
     for NAME, RESOURCE in RESOURCES.items():
         if RESOURCE['type'] == 'azurerm_network_security_group':
             LOGGER.info('Processing resource type: %s' % RESOURCE['type'])
             ParseAzureNetworkSecurityGroup(
                 LOG_LEVEL, RESOURCE, TERRAFORM_SECURITY_GROUPS)
+
         elif RESOURCE['type'] == 'aws_security_group':
             LOGGER.info('Processing resource type: %s' % RESOURCE['type'])
             ParseAwsSecurityGroup(
@@ -114,6 +119,7 @@ def security_groups(RESOURCES, LOGGER, LOG_LEVEL, TERRAFORM_SECURITY_GROUPS):
 def remaining_resources(RESOURCES, LOGGER, LOG_LEVEL, TERRAFORM_VMS,
                         TERRAFORM_NETWORK_INTERFACES,
                         TERRAFORM_ANSIBLE_GROUPS):
+    """Process remaining resources (VMs and etc.)."""
     for NAME, RESOURCE in RESOURCES.items():
         if RESOURCE['type'] == 'aws_instance':
             LOGGER.info('Processing resource type: %s' % RESOURCE['type'])

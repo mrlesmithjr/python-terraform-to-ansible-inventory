@@ -8,6 +8,7 @@ def parse(LOG_LEVEL, NAME, RESOURCE, TERRAFORM_ANSIBLE_GROUPS, TERRAFORM_VMS):
     vm = dict()
     raw_attrs = RESOURCE['primary']['attributes']
     LOGGER.debug(raw_attrs)
+
     try:
         ansible_groups = []
         groups = ast.literal_eval(raw_attrs['tags.ansible_groups'])
@@ -31,4 +32,5 @@ def parse(LOG_LEVEL, NAME, RESOURCE, TERRAFORM_ANSIBLE_GROUPS, TERRAFORM_VMS):
             'ansible_groups': ansible_groups
         }
     )
+
     TERRAFORM_VMS.append(vm)

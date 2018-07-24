@@ -55,10 +55,12 @@ def access_logs(KEY, raw_attrs, ACCESS_LOGS):
         'access_logs.%s.bucket_prefix' % ACCESS_LOG_ID)
     ACCESS_LOG_INTERVAL = ('access_logs.%s.interval' % ACCESS_LOG_ID)
     ACCESS_LOG.update(
-        {'bucket': raw_attrs[ACCESS_LOG_BUCKET],
-         'bucket_prefix': raw_attrs[ACCESS_LOG_BUCKET_PREFIX],
-         'interval': raw_attrs[ACCESS_LOG_INTERVAL]
-         })
+        {
+            'bucket': raw_attrs[ACCESS_LOG_BUCKET],
+            'bucket_prefix': raw_attrs[ACCESS_LOG_BUCKET_PREFIX],
+            'interval': raw_attrs[ACCESS_LOG_INTERVAL]
+        }
+    )
     if ACCESS_LOG not in ACCESS_LOGS:
         ACCESS_LOGS.append(ACCESS_LOG)
 
@@ -83,14 +85,16 @@ def health_checks(KEY, raw_attrs, HEALTH_CHECKS):
         'health_check.%s.interval' % HEALTH_CHECK_ID)
     HEALTH_CHECK_TARGET = ('health_check.%s.target' % HEALTH_CHECK_ID)
     HEALTH_CHECK.update(
-        {'healthy_threshold':
-         raw_attrs[HEALTH_CHECK_HEALTHY_THRESHOLD],
-         'unhealthy_threshold':
-         raw_attrs[HEALTH_CHECK_UNHEALTHY_THRESHOLD],
-         'timeout': raw_attrs[HEALTH_CHECK_TIMEOUT],
-         'interval': raw_attrs[HEALTH_CHECK_INTERVAL],
-         'target': raw_attrs[HEALTH_CHECK_TARGET]
-         })
+        {
+            'healthy_threshold':
+            raw_attrs[HEALTH_CHECK_HEALTHY_THRESHOLD],
+            'unhealthy_threshold':
+            raw_attrs[HEALTH_CHECK_UNHEALTHY_THRESHOLD],
+            'timeout': raw_attrs[HEALTH_CHECK_TIMEOUT],
+            'interval': raw_attrs[HEALTH_CHECK_INTERVAL],
+            'target': raw_attrs[HEALTH_CHECK_TARGET]
+        }
+    )
     if HEALTH_CHECK not in HEALTH_CHECKS:
         HEALTH_CHECKS.append(HEALTH_CHECK)
 
@@ -112,10 +116,13 @@ def listeners(KEY, raw_attrs, LISTENERS):
     LISTENER_LB_PORT = ('listener.%s.lb_port' % LISTENER_ID)
     LISTENER_LB_PROTOCOL = ('listener.%s.lb_protocol' % LISTENER_ID)
     LISTENER.update(
-        {'instance_port': raw_attrs[LISTENER_INSTANCE_PORT],
-         'instance_protocol': raw_attrs[LISTENER_INSTANCE_PROTOCOL],
-         'lb_port': raw_attrs[LISTENER_LB_PORT],
-         'lb_protocol': raw_attrs[LISTENER_LB_PROTOCOL]})
+        {
+            'instance_port': raw_attrs[LISTENER_INSTANCE_PORT],
+            'instance_protocol': raw_attrs[LISTENER_INSTANCE_PROTOCOL],
+            'lb_port': raw_attrs[LISTENER_LB_PORT],
+            'lb_protocol': raw_attrs[LISTENER_LB_PROTOCOL]
+        }
+    )
     if LISTENER not in LISTENERS:
         LISTENERS.append(LISTENER)
 
@@ -141,21 +148,23 @@ def tags(KEY, VALUE):
 def populate(raw_attrs, RESOURCE, TERRAFORM_LOAD_BALANCERS, LOGGER):
     """Populates ELB configuration based on captured details."""
     LOAD_BALANCER.update(
-        {'name': raw_attrs['name'],
-         'access_logs': ACCESS_LOGS,
-         'connection_draining': bool(raw_attrs['connection_draining']),
-         'connection_draining_timeout':
-         raw_attrs['connection_draining_timeout'],
-         'cross_zone_load_balancing':
-         bool(raw_attrs['cross_zone_load_balancing']),
-         'dns_name': raw_attrs['dns_name'], 'health_checks': HEALTH_CHECKS,
-         'idle_timeout': raw_attrs['idle_timeout'],
-         'internal': bool(raw_attrs['internal']),
-         'security_groups': SECURITY_GROUPS, 'subnets': SUBNETS,
-         'type': RESOURCE['type'], 'availability_zones': AVAILABILITY_ZONES,
-         'listeners': LISTENERS, 'tags': TAGS, 'instances': INSTANCES,
-         'zone_id': raw_attrs['zone_id']
-         })
+        {
+            'name': raw_attrs['name'],
+            'access_logs': ACCESS_LOGS,
+            'connection_draining': raw_attrs['connection_draining'],
+            'connection_draining_timeout':
+            raw_attrs['connection_draining_timeout'],
+            'cross_zone_load_balancing':
+            raw_attrs['cross_zone_load_balancing'],
+            'dns_name': raw_attrs['dns_name'], 'health_checks': HEALTH_CHECKS,
+            'idle_timeout': raw_attrs['idle_timeout'],
+            'internal': raw_attrs['internal'],
+            'security_groups': SECURITY_GROUPS, 'subnets': SUBNETS,
+            'type': RESOURCE['type'], 'availability_zones': AVAILABILITY_ZONES,
+            'listeners': LISTENERS, 'tags': TAGS, 'instances': INSTANCES,
+            'zone_id': raw_attrs['zone_id']
+        }
+    )
     if LOAD_BALANCER not in TERRAFORM_LOAD_BALANCERS:
         LOGGER.debug(LOAD_BALANCER)
         TERRAFORM_LOAD_BALANCERS.append(LOAD_BALANCER)

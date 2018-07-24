@@ -18,6 +18,7 @@ def parse(LOG_LEVEL, RESOURCE, TERRAFORM_SECURITY_GROUPS):
 
 
 def security_rule(raw_attrs, KEY, SECURITY_RULES):
+    """Populate Azure security rules."""
     SECURITY_RULE = dict()
     RULE_ID = KEY.split('.')[1]
     RULE_ACCESS = ('security_rule.%s.access' % RULE_ID)
@@ -34,6 +35,7 @@ def security_rule(raw_attrs, KEY, SECURITY_RULES):
         'security_rule.%s.source_address_prefix' % RULE_ID)
     RULE_SOURCE_PORT_RANGE = (
         'security_rule.%s.source_port_range' % RULE_ID)
+
     SECURITY_RULE.update(
         {
             'access': raw_attrs[RULE_ACCESS],
@@ -51,11 +53,14 @@ def security_rule(raw_attrs, KEY, SECURITY_RULES):
             'source_port_range': raw_attrs[RULE_SOURCE_PORT_RANGE]
         }
     )
+
     if SECURITY_RULE not in SECURITY_RULES:
         SECURITY_RULES.append(SECURITY_RULE)
 
 
-def populate(raw_attrs, SECURITY_GROUP, SECURITY_RULES, TERRAFORM_SECURITY_GROUPS):
+def populate(raw_attrs, SECURITY_GROUP, SECURITY_RULES,
+             TERRAFORM_SECURITY_GROUPS):
+    """Populate Azure security groups."""
     SECURITY_GROUP.update(
         {
             'id': raw_attrs['id'],
