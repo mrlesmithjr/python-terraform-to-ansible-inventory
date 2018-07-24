@@ -82,17 +82,20 @@ def azurerm_virtual_machine(LOGGER, VM, TERRAFORM_NETWORK_INTERFACES,
                     PUB_IPS.append(pub_ip['ip_address'])
 
             VM_INFO.update(
-                {'inventory_hostname': VM['inventory_hostname'],
-                 'data_type': VM['data_type'],
-                 'ansible_host': interface['private_ip_address'],
-                 'location': VM['location'],
-                 'mac_address': interface['mac_address'],
-                 'private_ips': interface['private_ips'],
-                 'public_ips': PUB_IPS,
-                 'resource_group_name': VM['resource_group_name'],
-                 'target': VM['target'],
-                 'vm_size': VM['vm_size'],
-                 'ansible_groups': VM['ansible_groups']})
+                {
+                    'inventory_hostname': VM['inventory_hostname'],
+                    'data_type': VM['data_type'],
+                    'ansible_host': interface['private_ip_address'],
+                    'location': VM['location'],
+                    'mac_address': interface['mac_address'],
+                    'private_ips': interface['private_ips'],
+                    'public_ips': PUB_IPS,
+                    'resource_group_name': VM['resource_group_name'],
+                    'target': VM['target'],
+                    'vm_size': VM['vm_size'],
+                    'ansible_groups': VM['ansible_groups']
+                }
+            )
 
             for security_group in TERRAFORM_SECURITY_GROUPS:
                 try:

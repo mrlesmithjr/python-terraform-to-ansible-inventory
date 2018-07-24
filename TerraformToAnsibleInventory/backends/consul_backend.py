@@ -1,6 +1,5 @@
 import consul
 import json
-# import sys
 from .. logging_config import setup as LoggingConfigSetup
 
 

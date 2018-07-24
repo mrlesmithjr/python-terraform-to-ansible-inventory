@@ -15,17 +15,25 @@ def parse(LOG_LEVEL, RESOURCE, TERRAFORM_NETWORK_INTERFACES):
             raw_attrs['private_ip_addresses.%s' % count])
         public_ips.append(
             raw_attrs['ip_configuration.%s.public_ip_address_id' % count])
-    interface.update({'virtual_machine_id': raw_attrs['virtual_machine_id'],
-                      'mac_address': raw_attrs['mac_address'],
-                      'private_ip_address': raw_attrs['private_ip_address'],
-                      'private_ips': private_ips,
-                      'public_ips': public_ips})
+
+    interface.update(
+        {
+            'virtual_machine_id': raw_attrs['virtual_machine_id'],
+            'mac_address': raw_attrs['mac_address'],
+            'private_ip_address': raw_attrs['private_ip_address'],
+            'private_ips': private_ips,
+            'public_ips': public_ips
+        }
+    )
 
     try:
         raw_attrs['network_security_group_id']
         interface.update(
-            {'network_security_group_id':
-             raw_attrs['network_security_group_id']})
+            {
+                'network_security_group_id':
+                raw_attrs['network_security_group_id']
+            }
+        )
     except KeyError:
         LOGGER.debug(KeyError)
         pass

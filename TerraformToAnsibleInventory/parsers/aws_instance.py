@@ -34,4 +34,5 @@ def parse(LOG_LEVEL, RESOURCE, NAME, TERRAFORM_VMS):
             'vpc_security_group_ids': VPC_SECURITY_GROUP_IDS
         }
     )
+
     TERRAFORM_VMS.append(VM)
