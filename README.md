@@ -4,6 +4,8 @@ This package is for consuming [Terraform State](https://www.terraform.io/docs/st
 parsing the data, and then generating a functional Ansible inventory which can
 then be consumed by Ansible.
 
+> NOTE: This project is no longer being developed and will eventually be replaced with https://github.com/mrlesmithjr/python-terraform-to-ansible
+
 ## Ansible Groups
 
 By default all VMs are placed into the Ansible group `terraform_vms`, however
