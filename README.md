@@ -1,4 +1,7 @@
-# python-terraform-to-ansible-inventory
+> [!CAUTION]
+> **This project is archived and no longer maintained.**
+> Archived: 2026-03-26
+> Reason: No longer being developed; see python-terraform-to-ansible for replacement# python-terraform-to-ansible-inventory
 
 This package is for consuming [Terraform State](https://www.terraform.io/docs/state/),
 parsing the data, and then generating a functional Ansible inventory which can
